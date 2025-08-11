@@ -23,7 +23,7 @@ def extract_pulses(config):
 
     pulses = []
     params = {'page': 1}
-    page_limit = config.get('PAGE_LIMIT', 0)  # 0 means no limit
+    page_limit = config.get('PAGE_LIMIT', 0) # default - 0
 
     while True:
         if page_limit and params['page'] > page_limit:
@@ -54,13 +54,11 @@ def print_insights(pulses):
         print("No pulses to analyze.")
         return
 
-    # Unique authors extraction using 'author_name'
     authors = [pulse.get('author_name') for pulse in pulses if pulse.get('author_name')]
     unique_authors = set(authors)
     print(f"Unique authors: {len(unique_authors)}")
     print(f"Unique author list: {unique_authors}")
 
-    # Top 5 tags
     all_tags = []
     for pulse in pulses:
         tags = pulse.get('tags', [])
@@ -70,7 +68,6 @@ def print_insights(pulses):
     for tag, count in top_tags:
         print(f"  {tag}: {count}")
 
-    # Threat level counts — check 'threat_level' or 'tlp' if threat_level missing
     threat_levels = [pulse.get('threat_level') or pulse.get('tlp') for pulse in pulses if (pulse.get('threat_level') or pulse.get('tlp'))]
     threat_counts = Counter(threat_levels)
     print("Threat level counts:")
@@ -80,7 +77,7 @@ def print_insights(pulses):
     else:
         print("  No threat level data found.")
 
-    # Created date range
+ 
     created_dates = []
     for pulse in pulses:
         created = pulse.get('created')
@@ -105,27 +102,23 @@ def transform_data(raw_pulses):
 
     for pulse in raw_pulses:
         try:
-            # Skip if no pulse_id (critical field)
             if not pulse.get('id'):
                 continue
                 
             doc = {
-                # Core identification
+            
                 'pulse_id': pulse.get('id'),
                 'name': pulse.get('name', ''),
                 'description': pulse.get('description', ''),
                 'author_name': pulse.get('author_name', ''),
-                
-                # Dates
+       
                 'created': parse_date(pulse.get('created')),
                 'modified': parse_date(pulse.get('modified')),
-                
-                # Classification
+       
                 'tlp': pulse.get('tlp', 'white'),
                 'public': pulse.get('public', True),
                 'revision': pulse.get('revision', 1),
-                
-                # Content arrays
+           
                 'tags': pulse.get('tags', []),
                 'references': pulse.get('references', []),
                 'malware_families': pulse.get('malware_families', []),
@@ -133,10 +126,8 @@ def transform_data(raw_pulses):
                 'industries': pulse.get('industries', []),
                 'targeted_countries': pulse.get('targeted_countries', []),
                 
-                # Indicators
                 'indicators': pulse.get('indicators', []),
-               
-               # Audit fields
+   
                 'ingested_at': ingest_time,
                 'last_updated_at': ingest_time,
 
@@ -166,7 +157,6 @@ def load_to_mongodb(db, documents):
     collection_name = 'alienvault_pulses'
     collection = db[collection_name]
     
-    # Create index for upserts
     collection.create_index("pulse_id", unique=True)
     
     if not documents:

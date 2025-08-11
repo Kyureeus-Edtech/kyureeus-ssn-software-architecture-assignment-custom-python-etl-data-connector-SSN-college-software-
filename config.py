@@ -13,8 +13,6 @@ def load_config():
     config['MONGO_DB'] = os.getenv('MONGO_DB')
 
 
-
-
     return config
 
 
