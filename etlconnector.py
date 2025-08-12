@@ -6,47 +6,58 @@ from datetime import datetime, timezone
 
 load_dotenv()
 
+def extract_threatfox_iocs(api_key, limit=50):
+    """Extracts IOCs from ThreatFox API."""
+    print(f"Extracting {limit} IOCs from ThreatFox API...")
+    api_url = "https://threatfox-api.abuse.ch/api/v1/"
 
-def extract_apod_data(api_key, count=5):
-    """Extracts a specified number of random entries from the NASA APOD API."""
-    print(f"Extracting {count} records from NASA APOD...")
-    api_url = f"https://api.nasa.gov/planetary/apod?api_key={api_key}&count={count}"
-    
+    headers = {
+        "Content-Type": "application/json",
+        "Auth-Key": api_key
+    }
+
+    payload = {
+        "query": "get_iocs",
+        "limit": limit,
+        "days" : 1,
+        "auth_key": api_key
+    }
+
     try:
-        response = requests.get(api_url)
-        response.raise_for_status()  # Checks for HTTP errors
+        response = requests.post(api_url, headers=headers, json=payload)
+        response.raise_for_status()
         print("Extraction successful!")
         return response.json()
     except requests.exceptions.RequestException as e:
         print(f"Extraction failed: {e}")
         return None
 
-
 def transform_data(data):
-    """Transforms data for loading."""
-    if not data:
+    """Transforms data for MongoDB insertion."""
+    if not data or "data" not in data:
         return []
-    
+
     print("Transforming data...")
     transformed_records = []
-    for record in data:
+    for record in data["data"]:
         transformed_record = {
-            'title': record.get('title'),
-            'date': record.get('date'),
-            'description': record.get('explanation'),
-            'url': record.get('url'),
-            'media_type': record.get('media_type'),
-            'copyright': record.get('copyright', 'Public Domain'),
+            'ioc': record.get('ioc'),
+            'threat_type': record.get('threat_type'),
+            'malware': record.get('malware'),
+            'confidence_level': record.get('confidence_level'),
+            'first_seen': record.get('first_seen'),
+            'last_seen': record.get('last_seen'),
+            'reference': record.get('reference'),
+            'tags': record.get('tags', []),
             'ingestion_timestamp': datetime.now(timezone.utc)
         }
-        transformed_records.append(record)
-    
+        transformed_records.append(transformed_record)
+
     print("Transformation successful!")
     return transformed_records
 
-
 def load_data(data):
-    """Loads transformed data into MongoDB."""
+    """Loads data into MongoDB."""
     if not data:
         print("No data to load.")
         return
@@ -60,8 +71,8 @@ def load_data(data):
     try:
         client = MongoClient(mongo_uri)
         db = client.data_pipelines
-        collection = db.nasa_apod_raw 
-        
+        collection = db.threatfox_iocs
+
         result = collection.insert_many(data)
         print(f"Successfully loaded {len(result.inserted_ids)} records.")
     except Exception as e:
@@ -70,13 +81,12 @@ def load_data(data):
         if 'client' in locals():
             client.close()
 
-
 if __name__ == "__main__":
-    nasa_api_key = os.getenv("NASA_API_KEY")
-    if not nasa_api_key:
-        print("Fatal Error: NASA_API_KEY is not set in your .env file.")
+    threatfox_api_key = os.getenv("THREATFOX_API_KEY")
+    if not threatfox_api_key:
+        print("Fatal Error: THREATFOX_API_KEY is not set in your .env file.")
     else:
-        extracted_data = extract_apod_data(nasa_api_key, count=25)
+        extracted_data = extract_threatfox_iocs(threatfox_api_key, limit=50)
         if extracted_data:
             transformed_data = transform_data(extracted_data)
             load_data(transformed_data)

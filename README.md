@@ -1,33 +1,54 @@
-# 🚀 NASA APOD ETL Pipeline
+ThreatFox IOC ETL Pipeline
+This project implements an ETL (Extract → Transform → Load) pipeline in Python to fetch Indicators of Compromise (IOCs) from the ThreatFox API, transform them into a structured format, and load them into a MongoDB database for further analysis and threat intelligence processing.
 
-This project implements an **ETL (Extract → Transform → Load)** pipeline in Python to fetch random Astronomy Picture of the Day (APOD) entries from the **NASA API**, transform them for MongoDB storage, and load them into a MongoDB collection.
+The script uses environment variables to store API endpoints and MongoDB credentials securely. It is modular and can be extended to work with other threat intelligence feeds.
 
-The script uses **environment variables** for secure handling of API keys and MongoDB credentials and is designed to be reusable for other API connectors.
+📌 Features
+Extract: Fetches a configurable number of IOCs from the ThreatFox API.
 
----
+Transform: Normalizes and structures IOC data for MongoDB storage.
 
-## 📌 Features
+Load: Inserts cleaned IOC records into a MongoDB collection.
 
-- **Extract**: Fetches a configurable number of random APOD entries from NASA’s API.
-- **Transform**: Cleans and structures the data for MongoDB insertion.
-- **Load**: Inserts transformed records into a MongoDB Atlas collection.
-- **Secure**: Uses `.env` file for API keys and secrets.
-- **Error Handling**: Handles network failures, empty responses, and missing credentials.
+Secure: Uses a .env file to manage credentials and settings.
 
----
+Configurable: Easily change the number of IOCs to fetch.
 
-### How to Run
+Error Handling: Handles API failures, empty responses, and database connection issues.
 
-1.  _Prerequisites:_ Ensure you have Python and MongoDB.
-2.  _Clone & Install:_
-    bash
-    git clone <your-repo-url>
-    cd <repo-name>
-    pip install -r requirements.txt
-3.  _Set Up Credentials:_ Create a .env file and add your credentials:
-    ini
-    NASA_API_KEY="your-key"
-    MONGO_URI="your-mongo-uri"
-4.  _Execute the Script:_
-    bash
-    python etl_connector.py
+⚙️ How to Run
+Prerequisites:
+
+Python 3.8+
+
+MongoDB (local or Atlas)
+
+ThreatFox API access (public API)
+
+Clone & Install:
+
+bash
+Copy
+Edit
+git clone <your-repo-url>
+cd <repo-name>
+pip install -r requirements.txt
+Set Up Environment Variables:
+Create a .env file in the project directory with the following content:
+
+ini
+Copy
+Edit
+THREATFOX_API_URL="https://threatfox-api.abuse.ch/api/v1/"
+MONGO_URI="your-mongodb-uri"
+MONGO_DB="your-database-name"
+MONGO_COLLECTION="your-collection-name"
+IOC_LIMIT=50
+Run the Script:
+
+bash
+Copy
+Edit
+python etlconnector.py
+Verify Data in MongoDB:
+Connect to your MongoDB instance and check the inserted IOC documents.
