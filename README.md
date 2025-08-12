@@ -1,5 +1,7 @@
-ThreatFox IOC ETL Pipeline
-This project implements an ETL (Extract → Transform → Load) pipeline in Python to fetch Indicators of Compromise (IOCs) from the ThreatFox API, transform them into a structured format, and load them into a MongoDB database for further analysis and threat intelligence processing.
+SHRI VISHAAL - 3122225001131 - CSE C
+
+10. ThreatFox IOC ETL Pipeline
+    This project implements an ETL (Extract → Transform → Load) pipeline in Python to fetch Indicators of Compromise (IOCs) from the ThreatFox API, transform them into a structured format, and load them into a MongoDB database for further analysis and threat intelligence processing.
 
 The script uses environment variables to store API endpoints and MongoDB credentials securely. It is modular and can be extended to work with other threat intelligence feeds.
 
