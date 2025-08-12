@@ -9,9 +9,9 @@ config = load_config()
 
 
 def connect_mongodb():
-    mongo_uri = os.getenv('MONGO_URI', 'mongodb://localhost:27017/')
+    mongo_uri = config['MONGO_URL']
     client = MongoClient(mongo_uri)
-    db_name = os.getenv('MONGO_DB', 'alienvault_db')
+    db_name = config['MONGO_DB']
     db = client[db_name]
     return db
 
