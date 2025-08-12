@@ -27,18 +27,12 @@ ThreatFox API access (public API)
 
 Clone & Install:
 
-bash
-Copy
-Edit
 git clone <your-repo-url>
 cd <repo-name>
 pip install -r requirements.txt
 Set Up Environment Variables:
 Create a .env file in the project directory with the following content:
 
-ini
-Copy
-Edit
 THREATFOX_API_URL="https://threatfox-api.abuse.ch/api/v1/"
 MONGO_URI="your-mongodb-uri"
 MONGO_DB="your-database-name"
@@ -46,9 +40,6 @@ MONGO_COLLECTION="your-collection-name"
 IOC_LIMIT=50
 Run the Script:
 
-bash
-Copy
-Edit
 python etlconnector.py
 Verify Data in MongoDB:
 Connect to your MongoDB instance and check the inserted IOC documents.
