@@ -1,0 +1,4 @@
+GREYNOISE_API_KEY=your_greynoise_api_key
+MONGODB_URI=your_mongodb_uri
+DB_NAME=your_database_name
+COLLECTION_NAME=your_collection_name

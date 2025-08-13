@@ -1,135 +1,88 @@
-# SSN-college-software-architecture-Assignments-
-Assignment repository for building custom Python ETL data connectors (Kyureeus EdTech, SSN CSE). Students: Submit your ETL scripts here. Make sure your commit message includes your name and roll number.
-# Software Architecture Assignment: Custom Python ETL Data Connector
+# Software Architecture Assignment
 
-Welcome to the official repository for submitting your Software Architecture assignment on building custom data connectors (ETL pipelines) in Python. This assignment is part of the Kyureeus EdTech program for SSN CSE students.
-
+## Overview
+This Python ETL connector retrieves IP intelligence data from the **GreyNoise API**, selects fields mentioned below, and stores the results in a MongoDB collection.
 ---
-Guideline: Building and Managing Custom Data Connectors (ETL Pipeline) in Python
 
-1. Setting Up the Connector Environment
-a. Choose Your API Provider: Identify a data provider and understand its Base URL, Endpoints, and Authentication.
-b. Understand the API Documentation: Focus on headers, query params, pagination, rate limits, and response structure.
-
-
-2. Secure API Authentication Using Environment Variables
-a. Create a `.env` File Locally: Store API keys and secrets as KEY=VALUE pairs.
-b. Load Environment Variables in Code: Use libraries like `dotenv` to securely load environment variables.
-
-
-3. Design the ETL Pipeline
-Extract: Connect to the API, pass tokens/headers, and collect JSON data.
-Transform: Clean or reformat the data for MongoDB compatibility.
-Load: Store the transformed data into a MongoDB collection.
-
-
-4. MongoDB Collection Strategy
-Use one collection per connector, e.g., `connector_name_raw`.
-Store ingestion timestamps to support audits or updates.
-
-
-5. Iterative Testing & Validation
-Test for invalid responses, empty payloads, rate limits, and connectivity errors.
-Ensure consistent insertion into MongoDB.
-
-
-6. Git and Project Structure Guidelines
-a. Use a Central Git Repository: Clone the shared repo and create a new branch for your connector.
-b. Ignore Secrets: Add `.env` to `.gitignore` before the first commit.
-c. Push and Document: Write README.md with endpoint details, API usage, and example output.
-
-
-Final Checklist for Students
-Understand API documentation
-Secure credentials in `.env`
-Build complete ETL script
-Validate MongoDB inserts
-Push code to your branch
-Include descriptive README
-Submit Pull Request
-
-## 📋 Assignment Overview
-
-**Goal:**  
-Develop a Python script to connect with an API provider, extract data, transform it for compatibility, and load it into a MongoDB collection. Follow secure coding and project structure practices as outlined below.
+## Features
+- **Extract**: Pull IP data from the GreyNoise `/v3/ip` API with `quick=false` for full details.
+- **Transform**: Keep only key fields:
+  - IP address
+  - Classification
+  - Service name and category
+  - ASN and organization
+  - Country, city
+  - Last seen date
+  - Ingestion timestamp
+- **Load**: Save cleaned data into MongoDB for easy queries.
 
 ---
 
-## ✅ Submission Checklist
-
-- [ ] Choose a data provider (API) and understand its documentation
-- [ ] Secure all API credentials using a `.env` file
-- [ ] Build a complete ETL pipeline: Extract → Transform → Load (into MongoDB)
-- [ ] Test and validate your pipeline (handle errors, invalid data, rate limits, etc.)
-- [ ] Follow the provided Git project structure
-- [ ] Write a clear and descriptive `README.md` in your folder with API details and usage instructions
-- [ ] **Include your name and roll number in your commit messages**
-- [ ] Push your code to your branch and submit a Pull Request
-
----
-
-## 📦 Project Structure
-
+## Project Structure
+```
 /your-branch-name/
-├── etl_connector.py
-├── .env
-├── requirements.txt
-├── README.md
-└── (any additional scripts or configs)
-
-
-- **`.env`**: Store sensitive credentials; do **not** commit this file.
-- **`etl_connector.py`**: Your main ETL script.
-- **`requirements.txt`**: List all Python dependencies.
-- **`README.md`**: Instructions for your connector.
+├── etl_connector.py      # Main ETL script
+├── requirements.txt      # Python dependencies
+├── .env                  # API key and MongoDB URI (not committed)
+├── README.md             # Documentation (this file)
+└── .gitignore            # Ignore .env, cache files, etc.
+```
 
 ---
 
-## 🛡️ Secure Authentication
-
-- Store all API keys/secrets in a local `.env` file.
-- Load credentials using the `dotenv` Python library.
-- Add `.env` to `.gitignore` before committing.
-
----
-
-## 🗃️ MongoDB Guidelines
-
-- Use one MongoDB collection per connector (e.g., `connectorname_raw`).
-- Store ingestion timestamps for audit and update purposes.
+## Requirements
+Your `requirements.txt` should contain:
+```
+requests
+pymongo
+python-dotenv
+```
 
 ---
 
-## 🧪 Testing & Validation
+## Environment Variables
+Create a `.env` file in the same directory as `etl_connector.py`:
 
-- Check for invalid responses, empty payloads, rate limits, and connectivity issues.
-- Ensure data is correctly inserted into MongoDB.
+```
+GREYNOISE_API_KEY=your_api_key_here
+MONGODB_URI=mongodb://localhost:27017
+
+```
+---
+
+## How to Run
+
+1. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+
+2. Run the ETL:
+   ```
+   python etl_connector.py
+   ```
+
+3. The script will:
+   - Call GreyNoise for the `test_ip` value.
+   - Extract and simplify the data.
+   - Insert the record into the `Greynoise` database, `IP_Data` collection in MongoDB.
 
 ---
 
-## 📝 Git & Submission Guidelines
+## MongoDB Output Example
+For IP `172.69.188.196`, a sample inserted document looks like:
 
-1. **Clone the repository** and create your own branch.
-2. **Add your code and documentation** in your folder/branch.
-3. **Do not commit** your `.env` or secrets.
-4. **Write clear commit messages** (include your name and roll number).
-5. **Submit a Pull Request** when done.
-
----
-
-## 💡 Additional Resources
-
-- [python-dotenv Documentation](https://saurabh-kumar.com/python-dotenv/)
-- [MongoDB Python Driver (PyMongo)](https://pymongo.readthedocs.io/en/stable/)
-- [API Documentation Example](https://restfulapi.net/)
-
----
-
-## 📢 Need Help?
-
-- Post your queries in the [KYUREEUS/SSN College - WhatsApp group](#) .
-- Discuss issues, share progress, and help each other.
-
----
-
-Happy coding! 🚀
+```
+{
+  "ip": "172.69.188.196",
+  "classification": "unknown",
+  "service_name": "Cloudflare CDN",
+  "service_category": "cdn",
+  "asn": "AS13335",
+  "organization": "Cloudflare, Inc.",
+  "country": "Lithuania",
+  "city": "Vilnius",
+  "last_seen": "2025-08-12",
+  "ingested_at": { "$date": "2025-08-12T18:30:00Z" }
+}
+```
