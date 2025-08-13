@@ -1,0 +1,3 @@
+MONGODB_URI = <MongoDB Host URI>
+MONGODB_DB = Database name
+MONGODB_COLLECTION = Collection name
