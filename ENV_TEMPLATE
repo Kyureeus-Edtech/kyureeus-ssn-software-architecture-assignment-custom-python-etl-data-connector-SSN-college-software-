@@ -1,0 +1,5 @@
+BASEURL=https://urlhaus.abuse.ch
+API_ENDPOINT=/downloads/csv_online/
+MONGODB_URI=your_mongodb_connection_string
+MONGODB_DB=your_database_name
+COLLECTION_NAME=your_collection_name
