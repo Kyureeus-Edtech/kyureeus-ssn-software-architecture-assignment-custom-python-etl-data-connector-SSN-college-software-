@@ -1,0 +1,9 @@
+# Copy this to .env locally and fill real values. DO NOT COMMIT .env
+MONGO_URI=mongodb://localhost:27017
+MONGO_DB=otx
+MONGO_COLLECTION=otx_ipv4_raw
+OTX_API_KEY=your_optional_otx_api_key
+OTX_USER_AGENT=SSN-SA-ETL/1.0
+REQUEST_TIMEOUT=20
+MAX_RETRIES=3
+RETRY_BACKOFF_SECONDS=2
