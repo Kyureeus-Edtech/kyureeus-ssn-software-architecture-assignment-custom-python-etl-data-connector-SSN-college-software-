@@ -1,0 +1,24 @@
+# Environment Variables Template for NVD CVE ETL Connector
+# Copy this file to .env and replace placeholder values with your actual configuration
+# Author: Janeshvar S
+# Roll Number: 3122225001047
+
+# NVD CVE API Configuration
+API_BASE_URL=https://services.nvd.nist.gov/rest/json/cves/2.0
+API_KEY=your_nvd_api_key_here_optional
+API_SECRET=your_api_secret_if_required
+
+# MongoDB Configuration
+MONGODB_CONNECTION_STRING=mongodb://localhost:27017/
+MONGODB_DATABASE=your_database_name
+MONGODB_COLLECTION=your_collection_name
+
+# ETL Configuration
+RATE_LIMIT_DELAY=2
+BATCH_SIZE=50
+RESULTS_PER_PAGE=100
+MAX_RETRIES=3
+
+# NVD API Specific Configuration
+START_INDEX=0
+TOTAL_RESULTS=500
