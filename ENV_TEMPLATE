@@ -1,0 +1,2 @@
+MONGO_URI = <your_mongo_uri>
+PHISHTANK_URL = https://data.phishtank.com/data/online-valid.csv

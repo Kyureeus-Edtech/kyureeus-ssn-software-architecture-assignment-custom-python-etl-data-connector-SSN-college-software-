@@ -1,0 +1,5 @@
+python-dotenv
+requests
+pymongo
+python-dateutil
+pandas    # optional, for comfort
