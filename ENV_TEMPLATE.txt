@@ -1,0 +1,13 @@
+# ==========================
+# SSL Labs API Configuration
+# ==========================
+# Provide the email address you registered with SSL Labs API v4.
+# This is used in the HTTP request header "email" when calling the API.
+SSL_LABS_EMAIL=your.registered.email@yourdomain.com
+
+# ==========================
+# MongoDB Connection Details
+# ==========================
+MONGO_URI=your_mongodb_connection_uri
+DB_NAME=your_db_name
+COLLECTION_NAME=your_collection_name
