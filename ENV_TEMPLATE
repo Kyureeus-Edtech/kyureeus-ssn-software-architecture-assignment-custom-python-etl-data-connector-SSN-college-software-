@@ -1,0 +1,5 @@
+MONGODB_URI= Localhost URI
+MONGODB_DB= DB name
+MONGODB_COLLECTION= Collection Name
+DSHIELD_BASE_URL=https://www.dshield.org/api
+USER_AGENT_EMAIL=youremail@example.com
