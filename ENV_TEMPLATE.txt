@@ -1,0 +1,10 @@
+MONGO_URI=mongodb+srv://************-cluster.j6czuyl.mongodb.net/?retryWrites=true&w=majority
+MONGO_DB=ssn_arch
+
+# First run:
+PROVIDER=cisa_kev
+CONNECTOR_NAME=cisa_kev
+
+# Second run:
+# PROVIDER=spamhaus_drop
+# CONNECTOR_NAME=spamhaus_drop
