@@ -6,8 +6,8 @@ Spamhaus DROP List ETL Connector
 - Loads/upserts into MongoDB
 Secure settings are pulled from .env
 
-Author: <Your Name>
-Roll No.: <Your Roll Number>
+Author: Vidisha Desai
+Roll No.: 3122225001154
 """
 
 import os
