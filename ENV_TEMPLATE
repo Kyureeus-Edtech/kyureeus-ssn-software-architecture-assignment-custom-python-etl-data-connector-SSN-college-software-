@@ -1,0 +1,5 @@
+API_KEY= dummy_apiKey
+MONGO_URI=mongodb://localhost:27017
+DB_NAME= db_name
+COLLECTION_NAME= col_name
+MAX_PULSES= 50
