@@ -1,0 +1,20 @@
+# Copy this file to `.env` and fill values. Do NOT commit `.env`.
+
+# --- NVD API ---
+NVD_BASE_URL=https://services.nvd.nist.gov/rest/json/cves/2.0
+NVD_API_KEY=your_api_key_or_blank
+
+# --- MongoDB ---
+MONGO_URI=mongodb://localhost:27017
+MONGO_DB=security_feeds
+MONGO_COLLECTION=nvd_cves_raw
+
+# --- Optional tuning ---
+RESULTS_PER_PAGE=200
+MAX_PAGES=20
+MAX_RETRIES=3
+RETRY_SLEEP_SECONDS=3
+
+# --- Optional time window (ISO 8601 Zulu) ---
+# PUB_START=2025-08-12T00:00:00Z
+# PUB_END=2025-08-13T00:00:00Z
