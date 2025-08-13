@@ -125,17 +125,17 @@ https://www.dshield.org/api/ip/13.94.254.200?json
 ## Example Log Output
 Output before transform:
 
-![output-before transform](output_images\output_before_transform.png)
+[![output-before transform](output_images/output_before_transform.png)](output_images/output_before_transform.png)
 
-Output after transform:
-![output-after transform](output_images\output_after_transform.png)
+Output after transform:  
+[![output-after transform](output_images/output_after_transform.png)](output_images/output_after_transform.png)
 
-![output log](output_images\output_log.png)
+[![output log](output_images/output_log.png)](output_images/output_log.png)
 
 ---
 
 ## MongoDB Output Example
-![mongodb load](output_images/mongodb_output.png)
+[![mongodb load](output_images/mongodb_output.png)](output_images/mongodb_output.png)
 
 
 ---
