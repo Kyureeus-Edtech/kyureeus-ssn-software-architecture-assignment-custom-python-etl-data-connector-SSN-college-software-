@@ -1,0 +1,4 @@
+API_KEY=my_key
+MONGODB_URI=mongodb://localhost:27017/etl_base
+
+
