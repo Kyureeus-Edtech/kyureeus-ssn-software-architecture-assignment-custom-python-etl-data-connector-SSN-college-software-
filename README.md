@@ -161,6 +161,6 @@ Each document contains:
 ```
 
 ## Output Screenshots 
-![Terminal](""C:\Users\rohan\Downloads\WhatsApp Image 2025-08-13 at 22.49.49.jpeg"")
-![Sample Output]("C:\Users\rohan\Downloads\WhatsApp Image 2025-08-13 at 22.54.10.jpeg")
+![Terminal](images/Terminal.jpeg)
+![Sample Output](images/Mongo.jpeg)
 
