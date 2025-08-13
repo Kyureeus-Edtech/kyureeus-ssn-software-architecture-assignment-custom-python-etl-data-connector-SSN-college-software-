@@ -1,0 +1,4 @@
+API_URL="your api url"
+MONGO_URI="your mongo url"
+DB_NAME="your database name"
+COLLECTION_NAME="your collection name"
