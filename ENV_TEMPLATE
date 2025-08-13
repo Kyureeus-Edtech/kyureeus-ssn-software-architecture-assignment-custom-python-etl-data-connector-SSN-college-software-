@@ -1,0 +1,6 @@
+API_BASE_URL=https://otx.alienvault.com/api/v1/
+PULSES_SUBSCRIBED_ENDPOINT=pulses/subscribed
+X-OTX-API-KEY=<your_alienvault_otx_api_key>
+PAGE_LIMIT=<your_page_limit>
+MONGO_URL=<your_mongo_url>
+MONGO_DB=<your_mongo_db>
