@@ -1,0 +1,4 @@
+CISA_KEV_URL=dummy
+MONGO_URI=mongodb://localhost:27017   # or your Atlas connection string
+MONGO_DB=etl_db
+MONGO_COLLECTION=cisa_kev
