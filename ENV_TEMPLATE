@@ -1,0 +1,5 @@
+OTX_BASE="https://otx.alienvault.com/api/v1/indicators/IPv4/{ip}/general"
+OTX_API_KEY="your_otx_api_key_here"
+MONGO_URI="mongodb://localhost:27017"
+MONGO_DB="your_db_name"
+COLLECTION_NAME="your_collection_name"
