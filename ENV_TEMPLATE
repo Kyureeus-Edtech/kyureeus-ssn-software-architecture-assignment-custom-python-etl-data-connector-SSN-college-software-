@@ -1,0 +1,3 @@
+MONGO_CONNECTION_URL=your_mongodb_connection_string
+API=https://urlhaus.abuse.ch/downloads/csv_online/
+DB_NAME=your_database_name

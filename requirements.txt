@@ -1,0 +1,6 @@
+pymongo
+dotenv
+requests
+csv
+os
+datetime
