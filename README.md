@@ -125,12 +125,12 @@ https://www.dshield.org/api/ip/13.94.254.200?json
 ## Example Log Output
 Output before transform:
 
-![output-before transform](output_images\output-before_transform.png)
+![output-before transform](output_images\output_before_transform.png)
 
 Output after transform:
-![output-after transform](output_images\output-after_transform.png)
+![output-after transform](output_images\output_after_transform.png)
 
-![output log](output_images\output-log.png)
+![output log](output_images\output_log.png)
 
 ---
 
