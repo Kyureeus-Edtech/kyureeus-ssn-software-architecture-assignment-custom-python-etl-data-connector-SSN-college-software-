@@ -1,0 +1,5 @@
+MONGO_URI= your_mongo_url
+MONGO_DB= your_mongo_db_name
+MONGO_COLLECTION= mongo_collection_name
+
+NVD_API_URL= nvd_api_url
