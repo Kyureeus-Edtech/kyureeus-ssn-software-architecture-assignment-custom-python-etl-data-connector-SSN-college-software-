@@ -30,9 +30,7 @@ from dotenv import load_dotenv
 from pymongo import MongoClient, errors as mongo_errors
 from pymongo.collection import Collection
 
-# ----------------------------
-# Config / Environment
-# ----------------------------
+
 
 def load_config() -> Dict[str, Any]:
     load_dotenv()  # loads from .env
@@ -53,9 +51,7 @@ def load_config() -> Dict[str, Any]:
         raise RuntimeError(f"Missing required env vars: {', '.join(missing)}")
     return cfg
 
-# ----------------------------
-# Utilities
-# ----------------------------
+
 
 def utcnow_iso() -> str:
     return dt.datetime.utcnow().replace(tzinfo=dt.timezone.utc).isoformat()
@@ -77,9 +73,6 @@ def iter_ips(cli_ip: Optional[str], file_path: Optional[str]) -> Iterable[str]:
                 if line:
                     yield line
 
-# ----------------------------
-# HTTP / Extraction
-# ----------------------------
 
 class AbuseIPDBClient:
     def __init__(self, api_key: str, base_url: str, timeout_s: int, retry_attempts: int, base_sleep_s: float):
@@ -150,9 +143,6 @@ class AbuseIPDBClient:
 
         return None, "Unexpected error in retry loop"
 
-# ----------------------------
-# Transform
-# ----------------------------
 
 def transform_record(raw: Dict[str, Any], ip: str) -> Dict[str, Any]:
     """
@@ -187,9 +177,7 @@ def transform_record(raw: Dict[str, Any], ip: str) -> Dict[str, Any]:
     })
     return doc
 
-# ----------------------------
-# Load (MongoDB)
-# ----------------------------
+
 
 def get_collection(uri: str, db_name: str, coll_name: str) -> Collection:
     try:
@@ -235,9 +223,6 @@ def load_document(coll: Collection, doc: Dict[str, Any]) -> Tuple[bool, Optional
     except mongo_errors.PyMongoError as e:
         return False, str(e)
 
-# ----------------------------
-# CLI / Orchestration
-# ----------------------------
 
 def run_etl(args: argparse.Namespace) -> int:
     cfg = load_config()
