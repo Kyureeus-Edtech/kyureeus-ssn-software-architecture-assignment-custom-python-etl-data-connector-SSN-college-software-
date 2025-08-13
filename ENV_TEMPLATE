@@ -1,0 +1,2 @@
+THREATFOX_API_KEY=<your threatfox api key>
+MONGO_URI = <your_mongo_uri>
