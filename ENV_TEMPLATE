@@ -1,0 +1,11 @@
+# API credentials
+API_KEY=your_api_key_here
+
+# MongoDB connection details
+DB_HOST=localhost
+DB_USER=
+DB_PASS=
+DB_NAME=etl_database
+
+# Other optional configs
+MAX_AGE_DAYS=90
