@@ -1,0 +1,14 @@
+# MongoDB connection details
+MONGODB_URI=mongodb://vishnu:pass@10.116.236.200:27017
+MONGODB_DB=CyberGreenMetrics_raw
+
+# CyberGreen API configuration
+CYBERGREEN_BASE=https://www.cybergreen.net
+CYBERGREEN_ENDPOINT=/measurements/
+CYBERGREEN_BULK_URL=http://bits.cybergreen.net/prod/stats/latest/count.csv
+
+# Local output file name (optional - for saving CSV locally)
+OUTPUT_FILE=cybergreen_data.csv
+
+# Number of records to process per batch
+BATCH_SIZE=1000
