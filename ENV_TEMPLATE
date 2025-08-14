@@ -1,0 +1,10 @@
+# MongoDB settings
+MONGODB_URI=MongoConnectionURL
+MONGODB_DB=DatabaseName
+MONGODB_COLLECTION=CollectionName
+
+# NVD API settings
+API_BASE_URL=NVDServicesURL
+API_KEY= Optional
+RESULTS_PER_PAGE=10
+START_INDEX=0
