@@ -1,0 +1,12 @@
+# API credentials
+OTX_API_KEY=your_otx_api_key_here
+BASE_URL=https://otx.alienvault.com/api/v1/pulses/subscribed
+
+# MongoDB
+MONGO_URI=mongodb://localhost:27017/
+DB_NAME=your_database_name
+COLLECTION=your_collection_name
+
+# Optional knobs
+REQUEST_TIMEOUT=20
+PAGE_SIZE=50
