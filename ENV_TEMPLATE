@@ -1,0 +1,4 @@
+MALSHARE_API_KEY=<your-malshare-api-key>
+MALSHARE_BASE_URL=https://malshare.com/api.php
+
+MONGO_URI=mongodb://<mongodb-username>:<mongodb-password>@<hostname>:<port> <!-- Or whatever mongodb uri you are using -->
