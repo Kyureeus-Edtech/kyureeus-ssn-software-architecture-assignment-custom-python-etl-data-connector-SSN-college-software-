@@ -1,0 +1,8 @@
+# For making API requests
+requests
+
+# For interacting with MongoDB
+pymongo
+
+# For loading variables from the .env file
+python-dotenv
