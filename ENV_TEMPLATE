@@ -1,0 +1,4 @@
+DROP_URL=your_drop_url_here
+MONGO_URI=your_mongo_connection_string_here
+DB_NAME=your_database_name_here
+COLLECTION_NAME=your_collection_name_here
