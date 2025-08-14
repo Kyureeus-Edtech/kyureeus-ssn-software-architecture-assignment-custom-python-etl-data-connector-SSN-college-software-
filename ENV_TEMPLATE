@@ -1,0 +1,4 @@
+MONGODB_URI=mongodb://localhost:27017/
+MONGO_DB=software_assign
+COLLECTION_NAME=threatfox_raw
+API_URL=https://threatfox.abuse.ch/export/json/threatfox_abuse_ch.json
