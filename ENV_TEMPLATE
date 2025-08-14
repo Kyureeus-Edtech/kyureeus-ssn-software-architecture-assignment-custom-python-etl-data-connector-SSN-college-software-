@@ -1,0 +1,2 @@
+API_KEY=<malshare-api-key>
+MONGO_URI=<your-mongo-db-connection-uri>
