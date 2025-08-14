@@ -1,135 +1,133 @@
-# SSN-college-software-architecture-Assignments-
-Assignment repository for building custom Python ETL data connectors (Kyureeus EdTech, SSN CSE). Students: Submit your ETL scripts here. Make sure your commit message includes your name and roll number.
-# Software Architecture Assignment: Custom Python ETL Data Connector
+# ThreatFox ETL Connector
 
-Welcome to the official repository for submitting your Software Architecture assignment on building custom data connectors (ETL pipelines) in Python. This assignment is part of the Kyureeus EdTech program for SSN CSE students.
+## 📌 Overview
+
+This Python ETL connector fetches **threat intelligence data** from the [ThreatFox Abuse.ch](https://threatfox.abuse.ch/) public JSON feed, transforms it for MongoDB storage, and loads it into a dedicated collection.
+
+The script ensures **secure credentials handling**, **duplicate prevention**, and **robust error handling** for production-grade reliability.
 
 ---
-Guideline: Building and Managing Custom Data Connectors (ETL Pipeline) in Python
 
-1. Setting Up the Connector Environment
-a. Choose Your API Provider: Identify a data provider and understand its Base URL, Endpoints, and Authentication.
-b. Understand the API Documentation: Focus on headers, query params, pagination, rate limits, and response structure.
+## 🔗 API Details
 
+- **API Name:** ThreatFox JSON Feed
+- **Base URL:** https://threatfox.abuse.ch/export/json/threatfox_abuse_ch.json
+- **Format:** JSON
+- **Authentication:** None required
+- **Description:** Provides a list of malicious indicators such as domains, IPs, and file hashes, updated regularly.
 
-2. Secure API Authentication Using Environment Variables
-a. Create a `.env` File Locally: Store API keys and secrets as KEY=VALUE pairs.
-b. Load Environment Variables in Code: Use libraries like `dotenv` to securely load environment variables.
+---
 
+## 📂 Project Structure
 
-3. Design the ETL Pipeline
-Extract: Connect to the API, pass tokens/headers, and collect JSON data.
-Transform: Clean or reformat the data for MongoDB compatibility.
-Load: Store the transformed data into a MongoDB collection.
+/TarunR_3122225001148_C/
+├── etl_connector.py # Main ETL script
+├── requirements.txt # Python dependencies
+├── README.md # Documentation
+├── ENV_TEMPLATE # Placeholder environment variables (no secrets)
+└── .env # Environment variables (DO NOT COMMIT)
 
+---
 
-4. MongoDB Collection Strategy
-Use one collection per connector, e.g., `connector_name_raw`.
-Store ingestion timestamps to support audits or updates.
+## ⚙️ Setup Instructions
 
+### 1️⃣ Clone Repository and Create Branch
 
-5. Iterative Testing & Validation
-Test for invalid responses, empty payloads, rate limits, and connectivity errors.
-Ensure consistent insertion into MongoDB.
+git clone https://github.com/Kyureeus-Edtech/custom-python-etl-data-connector-TarunR7.git
+cd custom-python-etl-data-connector-TarunR7
+git checkout -b TarunR_3122225001148_C
 
+### 2️⃣ Create .env File
 
-6. Git and Project Structure Guidelines
-a. Use a Central Git Repository: Clone the shared repo and create a new branch for your connector.
-b. Ignore Secrets: Add `.env` to `.gitignore` before the first commit.
-c. Push and Document: Write README.md with endpoint details, API usage, and example output.
+1. Locate the `ENV_TEMPLATE` file in this project.
+2. Copy it to a new file named `.env`:
+3. Replace the placeholder values in .env with your actual credentials and configuration.
+4. Register and get a free Auth-Key from the abuse.ch Authentication Portal
 
+### 3️⃣ Install Dependencies
 
-Final Checklist for Students
-Understand API documentation
-Secure credentials in `.env`
-Build complete ETL script
-Validate MongoDB inserts
-Push code to your branch
-Include descriptive README
-Submit Pull Request
+pip install -r requirements.txt
 
-## 📋 Assignment Overview
+---
 
-**Goal:**  
-Develop a Python script to connect with an API provider, extract data, transform it for compatibility, and load it into a MongoDB collection. Follow secure coding and project structure practices as outlined below.
+## 🚀 Running the ETL
+
+python etl_connector.py
+
+The script will:
+
+1. Extract data from ThreatFox JSON feed
+2. Transform the data by adding ingested_at timestamps and validating structure
+3. Load the data into MongoDB (threatfox_raw collection) with duplicate prevention
+
+---
+
+## 🛡️ Duplicate Prevention
+
+- MongoDB has a unique index on the id field from ThreatFox
+- Already ingested entries will be skipped automatically
+
+---
+
+## 🧪 Error Handling & Validation
+
+- Retries up to 3 times on connection failures or rate limits (429)
+- Waits according to the Retry-After header if provided
+- Validates JSON structure before processing
+- Skips malformed records without breaking the ETL
+
+---
+
+## 📊 MongoDB Collection Details
+
+- Collection Name: threatfox_raw
+- Fields: As provided by ThreatFox feed + ingested_at timestamp
+- Indexes: Unique index on id for duplicate prevention
+
+Example document:
+{
+"query_status": "ok",
+"data": [
+{
+"id": "41",
+"ioc": "gaga.com",
+"threat_type": "botnet_cc",
+"threat_type_desc": "Indicator that identifies a botnet command&control server (C&C)",
+"ioc_type": "domain",
+"ioc_type_desc": "Domain that is used for botnet Command&control (C&C)",
+"malware": "win.dridex",
+"malware_printable": "Dridex",
+"malware_alias": null,
+"malware_malpedia": "https:\/\/malpedia.caad.fkie.fraunhofer.de\/details\/win.dridex",
+"confidence_level": 50,
+"first_seen": "2020-12-08 13:36:27 UTC",
+"last_seen": null,
+"reporter": "abuse_ch",
+"reference": "https:\/\/twitter.com\/JAMESWT_MHT\/status\/1336229725082177536",
+"tags": [
+"exe",
+"test"
+]
+},
+[...]
+]
+}
 
 ---
 
 ## ✅ Submission Checklist
 
-- [ ] Choose a data provider (API) and understand its documentation
-- [ ] Secure all API credentials using a `.env` file
-- [ ] Build a complete ETL pipeline: Extract → Transform → Load (into MongoDB)
-- [ ] Test and validate your pipeline (handle errors, invalid data, rate limits, etc.)
-- [ ] Follow the provided Git project structure
-- [ ] Write a clear and descriptive `README.md` in your folder with API details and usage instructions
-- [ ] **Include your name and roll number in your commit messages**
-- [ ] Push your code to your branch and submit a Pull Request
+- [x] Chose ThreatFox API and understood documentation
+- [x] Secured MongoDB credentials in .env
+- [x] Built full ETL: Extract → Transform → Load
+- [x] Added rate limit handling, retries, and validation
+- [x] Prevented duplicate entries using MongoDB index
+- [x] Wrote README with setup and API details
+- [x] Ready to push branch and create Pull Request
 
 ---
 
-## 📦 Project Structure
+## 📌 Commit Message Format
 
-/your-branch-name/
-├── etl_connector.py
-├── .env
-├── requirements.txt
-├── README.md
-└── (any additional scripts or configs)
-
-
-- **`.env`**: Store sensitive credentials; do **not** commit this file.
-- **`etl_connector.py`**: Your main ETL script.
-- **`requirements.txt`**: List all Python dependencies.
-- **`README.md`**: Instructions for your connector.
-
----
-
-## 🛡️ Secure Authentication
-
-- Store all API keys/secrets in a local `.env` file.
-- Load credentials using the `dotenv` Python library.
-- Add `.env` to `.gitignore` before committing.
-
----
-
-## 🗃️ MongoDB Guidelines
-
-- Use one MongoDB collection per connector (e.g., `connectorname_raw`).
-- Store ingestion timestamps for audit and update purposes.
-
----
-
-## 🧪 Testing & Validation
-
-- Check for invalid responses, empty payloads, rate limits, and connectivity issues.
-- Ensure data is correctly inserted into MongoDB.
-
----
-
-## 📝 Git & Submission Guidelines
-
-1. **Clone the repository** and create your own branch.
-2. **Add your code and documentation** in your folder/branch.
-3. **Do not commit** your `.env` or secrets.
-4. **Write clear commit messages** (include your name and roll number).
-5. **Submit a Pull Request** when done.
-
----
-
-## 💡 Additional Resources
-
-- [python-dotenv Documentation](https://saurabh-kumar.com/python-dotenv/)
-- [MongoDB Python Driver (PyMongo)](https://pymongo.readthedocs.io/en/stable/)
-- [API Documentation Example](https://restfulapi.net/)
-
----
-
-## 📢 Need Help?
-
-- Post your queries in the [KYUREEUS/SSN College - WhatsApp group](#) .
-- Discuss issues, share progress, and help each other.
-
----
-
-Happy coding! 🚀
+When committing your code, include:
+Added ThreatFox ETL Connector - Your Name (Roll No. XXXX)

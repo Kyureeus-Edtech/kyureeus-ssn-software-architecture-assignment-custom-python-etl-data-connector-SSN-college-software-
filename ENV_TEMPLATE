@@ -1,0 +1,6 @@
+MONGO_URI=your_mongodb_connection_uri
+DB_NAME=etl_db
+THREATFOX_AUTH_KEY=your_auth_key_here
+DAYS=7
+COLLECTION_NAME=threatfox_raw
+API_URL=api_endpoint
