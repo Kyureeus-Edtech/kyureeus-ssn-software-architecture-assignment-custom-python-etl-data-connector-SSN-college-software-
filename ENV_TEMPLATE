@@ -1,0 +1,9 @@
+# NVD API credentials (optional but recommended for higher rate limits)
+API_KEY=your_api_key_here
+
+BASE_URL=https://services.nvd.nist.gov
+API_ENDPOINT=/rest/json/cves/2.0
+
+MONGODB_URI=mongodb://localhost:12345
+MONGODB_DB=db_name
+COLLECTION_NAME=collection_name
