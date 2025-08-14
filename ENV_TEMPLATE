@@ -1,0 +1,13 @@
+# .env.template
+
+# CISA Known Exploited Vulnerabilities feed URL (no secret needed)
+CISA_KEV_URL=https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json
+
+# MongoDB connection string (replace with your connection URI)
+MONGO_URI=mongodb://localhost:27017
+
+# MongoDB database name
+MONGO_DB=etl_db
+
+# MongoDB collection name
+MONGO_COLLECTION=cisa_kev

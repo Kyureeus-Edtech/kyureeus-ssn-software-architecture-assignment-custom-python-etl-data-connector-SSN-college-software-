@@ -1,135 +1,130 @@
-# SSN-college-software-architecture-Assignments-
-Assignment repository for building custom Python ETL data connectors (Kyureeus EdTech, SSN CSE). Students: Submit your ETL scripts here. Make sure your commit message includes your name and roll number.
-# Software Architecture Assignment: Custom Python ETL Data Connector
+SSN College – Software Architecture Assignment
+Software Architecture Assignment: Custom Python ETL Data Connector
+CISA KEV ETL Connector
 
-Welcome to the official repository for submitting your Software Architecture assignment on building custom data connectors (ETL pipelines) in Python. This assignment is part of the Kyureeus EdTech program for SSN CSE students.
+Overview
+This ETL script fetches data from the CISA Known Exploited Vulnerabilities (KEV) Catalog, transforms it by sanitizing keys and adding an ingestion timestamp, and loads the data into a MongoDB collection.
 
----
-Guideline: Building and Managing Custom Data Connectors (ETL Pipeline) in Python
+Source URL: CISA KEV JSON Feed
+Authentication Required: No
 
+Guidelines: Building and Managing Custom Data Connectors (ETL Pipeline) in Python
 1. Setting Up the Connector Environment
-a. Choose Your API Provider: Identify a data provider and understand its Base URL, Endpoints, and Authentication.
-b. Understand the API Documentation: Focus on headers, query params, pagination, rate limits, and response structure.
+Choose Your API Provider: CISA KEV JSON feed.
 
+Understand the API Documentation:
+
+Base URL: https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json
+
+Response Format: JSON
+
+No authentication required.
 
 2. Secure API Authentication Using Environment Variables
-a. Create a `.env` File Locally: Store API keys and secrets as KEY=VALUE pairs.
-b. Load Environment Variables in Code: Use libraries like `dotenv` to securely load environment variables.
+Create a .env file locally to store configuration variables:
 
+text
+CISA_KEV_URL=https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json
+MONGO_URI=mongodb://localhost:27017
+MONGO_DB=etl_db
+MONGO_COLLECTION=cisa_kev
+Install and use python-dotenv to load them in your script.
+
+Add .env to .gitignore to avoid committing credentials/configs.
 
 3. Design the ETL Pipeline
-Extract: Connect to the API, pass tokens/headers, and collect JSON data.
-Transform: Clean or reformat the data for MongoDB compatibility.
-Load: Store the transformed data into a MongoDB collection.
+Extract: Fetch JSON data from the CISA KEV API.
 
+Transform: Clean MongoDB-incompatible keys (e.g., . and $) and add an ingested_at UTC timestamp.
+
+Load: Bulk insert into the MongoDB collection for better performance.
 
 4. MongoDB Collection Strategy
-Use one collection per connector, e.g., `connector_name_raw`.
-Store ingestion timestamps to support audits or updates.
+Database: etl_db
 
+Collection: cisa_kev
+
+Store each vulnerability record with ingested_at timestamp for audit and tracking.
 
 5. Iterative Testing & Validation
-Test for invalid responses, empty payloads, rate limits, and connectivity errors.
-Ensure consistent insertion into MongoDB.
+Test for:
 
+Invalid responses
 
-6. Git and Project Structure Guidelines
-a. Use a Central Git Repository: Clone the shared repo and create a new branch for your connector.
-b. Ignore Secrets: Add `.env` to `.gitignore` before the first commit.
-c. Push and Document: Write README.md with endpoint details, API usage, and example output.
+Empty payloads
 
+Connection errors
 
-Final Checklist for Students
-Understand API documentation
-Secure credentials in `.env`
-Build complete ETL script
-Validate MongoDB inserts
-Push code to your branch
-Include descriptive README
-Submit Pull Request
+Verify MongoDB insertion with:
 
-## 📋 Assignment Overview
+bash
+mongosh
+use etl_db
+db.cisa_kev.find().limit(3).pretty()
+6. Project Structure
+text
+custom-python-etl-data-connector-captainsparrow73/
+├── .env                 # Environment variables (not committed to Git)
+├── .gitignore           # Ignore .env, venv, and cache files
+├── requirements.txt     # Dependencies
+├── etl_connector.py     # Main ETL script
+└── README.md            # Project documentation
+Setup and Run
+1. Clone the repository:
+bash
+git clone https://github.com/Kyureeus-Edtech/custom-python-etl-data-connector-captainsparrow73.git
+cd custom-python-etl-data-connector-captainsparrow73
+2. Create and activate a virtual environment:
+Windows PowerShell
 
-**Goal:**  
-Develop a Python script to connect with an API provider, extract data, transform it for compatibility, and load it into a MongoDB collection. Follow secure coding and project structure practices as outlined below.
+bash
+python -m venv .venv
+.\\.venv\\Scripts\\Activate.ps1
+macOS/Linux
 
----
+bash
+python3 -m venv .venv
+source .venv/bin/activate
+3. Install dependencies:
+bash
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+4. Run the ETL script:
+bash
+python etl_connector.py
+Author
+Name: Mohamed Imran Fareeth S
+Roll No: 3122225001072 B
 
-## ✅ Submission Checklist
+ Submission Checklist
+ Chose API provider and understood documentation
 
-- [ ] Choose a data provider (API) and understand its documentation
-- [ ] Secure all API credentials using a `.env` file
-- [ ] Build a complete ETL pipeline: Extract → Transform → Load (into MongoDB)
-- [ ] Test and validate your pipeline (handle errors, invalid data, rate limits, etc.)
-- [ ] Follow the provided Git project structure
-- [ ] Write a clear and descriptive `README.md` in your folder with API details and usage instructions
-- [ ] **Include your name and roll number in your commit messages**
-- [ ] Push your code to your branch and submit a Pull Request
+ Stored configuration in .env and secured it in .gitignore
 
----
+ Built complete ETL: Extract → Transform → Load
 
-## 📦 Project Structure
+ Validated data in MongoDB
 
-/your-branch-name/
-├── etl_connector.py
-├── .env
-├── requirements.txt
-├── README.md
-└── (any additional scripts or configs)
+ Wrote descriptive README.md
 
+ Included name + roll number in commit message
 
-- **`.env`**: Store sensitive credentials; do **not** commit this file.
-- **`etl_connector.py`**: Your main ETL script.
-- **`requirements.txt`**: List all Python dependencies.
-- **`README.md`**: Instructions for your connector.
+ Submitted Pull Request
 
----
+Tech Stack
+Python 3.x
 
-## 🛡️ Secure Authentication
+requests
 
-- Store all API keys/secrets in a local `.env` file.
-- Load credentials using the `dotenv` Python library.
-- Add `.env` to `.gitignore` before committing.
+pymongo
 
----
+python-dotenv
 
-## 🗃️ MongoDB Guidelines
+MongoDB (local or Atlas Cloud)
 
-- Use one MongoDB collection per connector (e.g., `connectorname_raw`).
-- Store ingestion timestamps for audit and update purposes.
+Notes
+No authentication required for CISA KEV API.
 
----
+Keys are sanitized for MongoDB compatibility.
 
-## 🧪 Testing & Validation
-
-- Check for invalid responses, empty payloads, rate limits, and connectivity issues.
-- Ensure data is correctly inserted into MongoDB.
-
----
-
-## 📝 Git & Submission Guidelines
-
-1. **Clone the repository** and create your own branch.
-2. **Add your code and documentation** in your folder/branch.
-3. **Do not commit** your `.env` or secrets.
-4. **Write clear commit messages** (include your name and roll number).
-5. **Submit a Pull Request** when done.
-
----
-
-## 💡 Additional Resources
-
-- [python-dotenv Documentation](https://saurabh-kumar.com/python-dotenv/)
-- [MongoDB Python Driver (PyMongo)](https://pymongo.readthedocs.io/en/stable/)
-- [API Documentation Example](https://restfulapi.net/)
-
----
-
-## 📢 Need Help?
-
-- Post your queries in the [KYUREEUS/SSN College - WhatsApp group](#) .
-- Discuss issues, share progress, and help each other.
-
----
-
-Happy coding! 🚀
+Bulk inserts improve performance.
