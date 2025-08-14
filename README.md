@@ -1,135 +1,118 @@
-# SSN-college-software-architecture-Assignments-
-Assignment repository for building custom Python ETL data connectors (Kyureeus EdTech, SSN CSE). Students: Submit your ETL scripts here. Make sure your commit message includes your name and roll number.
-# Software Architecture Assignment: Custom Python ETL Data Connector
+# URLHaus CSV ETL Connector
 
-Welcome to the official repository for submitting your Software Architecture assignment on building custom data connectors (ETL pipelines) in Python. This assignment is part of the Kyureeus EdTech program for SSN CSE students.
+**Author:** Mugilkrishna D U  
+**Roll No:** 3122 22 5001 073  
+**Year/Sec:** CSE B  
+**Department:** Computer Science & Engineering, SSN College of Engineering
 
----
-Guideline: Building and Managing Custom Data Connectors (ETL Pipeline) in Python
+## Overview
 
-1. Setting Up the Connector Environment
-a. Choose Your API Provider: Identify a data provider and understand its Base URL, Endpoints, and Authentication.
-b. Understand the API Documentation: Focus on headers, query params, pagination, rate limits, and response structure.
+This ETL (Extract, Transform, Load) connector framework fetches malware URL data from the **URLHaus CSV API**, transforms it into a MongoDB-friendly JSON format, and loads it into a dedicated MongoDB collection. The connector supports secure environment variable management, basic data cleaning, and timestamp-based ingestion tracking.
 
+## API Details
 
-2. Secure API Authentication Using Environment Variables
-a. Create a `.env` File Locally: Store API keys and secrets as KEY=VALUE pairs.
-b. Load Environment Variables in Code: Use libraries like `dotenv` to securely load environment variables.
+* **Provider:** Abuse.ch – URLHaus
+* **Base URL (CSV Download):** `https://urlhaus.abuse.ch/downloads/csv_online/`
+* **CSV Endpoint (GET):** https://urlhaus.abuse.ch/downloads/csv_online/ – downloads CSV data containing recent malicious URLs.
+* **JSON API Endpoint (POST):** https://urlhaus.abuse.ch/api/ – accepts a JSON payload { "query": "get_recent" } to retrieve recent data in structured format.
+* **Query:** `get_recent`
+* **Format:** CSV with comment lines (lines starting with `#`)
+* **Documentation:** https://urlhaus.abuse.ch/api/
 
+## Authentication & Security
 
-3. Design the ETL Pipeline
-Extract: Connect to the API, pass tokens/headers, and collect JSON data.
-Transform: Clean or reformat the data for MongoDB compatibility.
-Load: Store the transformed data into a MongoDB collection.
+1. The URLHaus public CSV endpoint does not require authentication.
+2. MongoDB credentials are stored in a local `.env` file (not committed to Git, for obvious security reasons).
 
+## MongoDB Storage Strategy
 
-4. MongoDB Collection Strategy
-Use one collection per connector, e.g., `connector_name_raw`.
-Store ingestion timestamps to support audits or updates.
+* **Collection Name:** `{CONNECTOR_NAME}_raw` (e.g., `urlhaus_connector_raw`)
+* **Primary Fields:**
+   * `ingested_at` → Timestamp of ingestion (UTC)
+   * All CSV columns mapped directly into document fields
 
+## Transformations Applied
 
-5. Iterative Testing & Validation
-Test for invalid responses, empty payloads, rate limits, and connectivity errors.
-Ensure consistent insertion into MongoDB.
+* CSV is parsed into a Pandas DataFrame with comment line filtering
+* `ingested_at` field added to each record with UTC timestamp
+* Records converted to list of JSON-like dictionaries before loading
+* Empty or invalid CSV content is handled gracefully
 
+## Error Handling
 
-6. Git and Project Structure Guidelines
-a. Use a Central Git Repository: Clone the shared repo and create a new branch for your connector.
-b. Ignore Secrets: Add `.env` to `.gitignore` before the first commit.
-c. Push and Document: Write README.md with endpoint details, API usage, and example output.
+* **CSV fetch failure:** Logs error and exits without writing to database
+* **Empty CSV content:** Skips transformation and loading steps
+* **MongoDB connection errors:** Handled with try/except blocks and logged for debugging
+* **Network timeouts:** 30-second timeout configured for API requests
 
+## Testing & Validation
 
-Final Checklist for Students
-Understand API documentation
-Secure credentials in `.env`
-Build complete ETL script
-Validate MongoDB inserts
-Push code to your branch
-Include descriptive README
-Submit Pull Request
+* Verified data load for multiple runs
+* Tested behavior with invalid MongoDB URI and the connector exits gracefully
+* Tested with network failures and invalid CSV URLs
+* Checked insertion counts to confirm data integrity
 
-## 📋 Assignment Overview
+## Example Input (CSV Row)
 
-**Goal:**  
-Develop a Python script to connect with an API provider, extract data, transform it for compatibility, and load it into a MongoDB collection. Follow secure coding and project structure practices as outlined below.
+```csv
+# URLhaus CSV data
+id,dateadded,url,url_status,threat,tags,urlhaus_link,reporter
+1234567,2025-08-13,https://malicious.example,online,malware,"exe,zip",https://urlhaus.abuse.ch/url/1234567/,researcher
+```
 
----
+## Example Output (MongoDB Document)
 
-## ✅ Submission Checklist
+```json
+{
+  "3603095": 3603094,
+  "_id": {
+    "$oid": "689e1ffb76cdf7ac5f1f395f"
+  },
+  "2025-08-14 17:29:06": "2025-08-14 17:25:15",
+  "http://112.248.140.118:33710/bin.sh": "http://116.138.188.124:33595/bin.sh",
+  "online": "online",
+  "2025-08-14 17:29:06.1": "2025-08-14 17:25:15",
+  "malware_download": "malware_download",
+  "32-bit,elf,mips,Mozi": "32-bit,elf,mips,Mozi",
+  "https://urlhaus.abuse.ch/url/3603095/": "https://urlhaus.abuse.ch/url/3603094/",
+  "geenensp": "geenensp",
+  "ingested_at": {
+    "$date": "2025-08-14T17:42:19.386Z"
+  }
+}
+```
 
-- [ ] Choose a data provider (API) and understand its documentation
-- [ ] Secure all API credentials using a `.env` file
-- [ ] Build a complete ETL pipeline: Extract → Transform → Load (into MongoDB)
-- [ ] Test and validate your pipeline (handle errors, invalid data, rate limits, etc.)
-- [ ] Follow the provided Git project structure
-- [ ] Write a clear and descriptive `README.md` in your folder with API details and usage instructions
-- [ ] **Include your name and roll number in your commit messages**
-- [ ] Push your code to your branch and submit a Pull Request
+## Installation & Usage
 
----
+1. **Clone the repository** and navigate to your project folder.
+2. **Create `.env` file** using the template provided:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your specific configuration
+   ```
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. **Ensure MongoDB is running** on your system or update `MONGO_URI` in `.env` for remote MongoDB instance.
+5. **Run the connector:**
+   ```bash
+   python url_haus_etl_connector.py
+   ```
 
-## 📦 Project Structure
+## Environment Variables
 
-/your-branch-name/
-├── etl_connector.py
-├── .env
-├── requirements.txt
-├── README.md
-└── (any additional scripts or configs)
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `CSV_API_URL` | URLHaus CSV endpoint | `https://urlhaus.abuse.ch/downloads/csv_online/` |
+| `MONGO_URI` | MongoDB connection string | `mongodb://localhost:27017` |
+| `MONGO_DB` | Target database name | `etl_assgn1` |
+| `CONNECTOR_NAME` | Prefix for collection names | `urlhaus_connector` |
 
+## Logging
 
-- **`.env`**: Store sensitive credentials; do **not** commit this file.
-- **`etl_connector.py`**: Your main ETL script.
-- **`requirements.txt`**: List all Python dependencies.
-- **`README.md`**: Instructions for your connector.
+The connector provides informational and error logging to help with debugging:
 
----
-
-## 🛡️ Secure Authentication
-
-- Store all API keys/secrets in a local `.env` file.
-- Load credentials using the `dotenv` Python library.
-- Add `.env` to `.gitignore` before committing.
-
----
-
-## 🗃️ MongoDB Guidelines
-
-- Use one MongoDB collection per connector (e.g., `connectorname_raw`).
-- Store ingestion timestamps for audit and update purposes.
-
----
-
-## 🧪 Testing & Validation
-
-- Check for invalid responses, empty payloads, rate limits, and connectivity issues.
-- Ensure data is correctly inserted into MongoDB.
-
----
-
-## 📝 Git & Submission Guidelines
-
-1. **Clone the repository** and create your own branch.
-2. **Add your code and documentation** in your folder/branch.
-3. **Do not commit** your `.env` or secrets.
-4. **Write clear commit messages** (include your name and roll number).
-5. **Submit a Pull Request** when done.
-
----
-
-## 💡 Additional Resources
-
-- [python-dotenv Documentation](https://saurabh-kumar.com/python-dotenv/)
-- [MongoDB Python Driver (PyMongo)](https://pymongo.readthedocs.io/en/stable/)
-- [API Documentation Example](https://restfulapi.net/)
-
----
-
-## 📢 Need Help?
-
-- Post your queries in the [KYUREEUS/SSN College - WhatsApp group](#) .
-- Discuss issues, share progress, and help each other.
-
----
-
-Happy coding! 🚀
+* `[INFO]` messages for successful operations
+* `[ERROR]` messages for failures and exceptions
+* Progress indicators for each ETL step

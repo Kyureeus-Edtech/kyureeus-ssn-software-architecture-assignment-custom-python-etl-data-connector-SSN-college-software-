@@ -1,0 +1,12 @@
+# API configuration
+API_URL=https://urlhaus.abuse.ch/api/
+
+# MongoDB configuration
+MONGODB_URI=mongodb://localhost:27017
+MONGODB_DB=urlhaus
+MONGODB_COLLECTION=url_haus_raw
+
+# HTTP timeout and retries
+HTTP_TIMEOUT=30
+MAX_RETRIES=5
+BACKOFF_BASE_SECONDS=1
