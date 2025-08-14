@@ -20,5 +20,5 @@ This project implements a complete **ETL (Extract → Transform → Load)** pipe
 
 ### Clone the Repository
 ```bash
-git clone <your-repo-link>
+git clone https://github.com/Kyureeus-Edtech/kyureeus-ssn-software-architecture-assignment-custom-python-etl-data-connector-SSN-college-software-.git
 cd <your-project-folder>
