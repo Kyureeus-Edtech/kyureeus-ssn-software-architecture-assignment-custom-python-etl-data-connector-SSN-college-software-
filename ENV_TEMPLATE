@@ -1,0 +1,2 @@
+MONGO_URI=your_mongodb_connection_url
+MONGO_DB_NAME=your_mongodb_name
