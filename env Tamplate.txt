@@ -1,0 +1,4 @@
+# Mongo connection (change as needed)
+MONGO_URI=<mongodb uri>
+
+PHISHTANK_URL=https://data.phishtank.com/data/online-valid.csv
