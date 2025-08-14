@@ -1,0 +1,8 @@
+# ====== Have I Been Pwned API Credentials ======
+HIBP_EMAIL=your_email@example.com
+HIBP_API_KEY=your_hibp_api_key_here   # Get from https://haveibeenpwned.com/API/Key
+
+# ====== MongoDB Settings ======
+MONGODB_URI=mongodb://localhost:27017
+MONGODB_DB=kyureeus_assignments
+CONNECTOR_NAME=hibp_connector
