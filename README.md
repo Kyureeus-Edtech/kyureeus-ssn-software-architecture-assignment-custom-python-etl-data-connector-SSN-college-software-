@@ -1,135 +1,108 @@
-# SSN-college-software-architecture-Assignments-
-Assignment repository for building custom Python ETL data connectors (Kyureeus EdTech, SSN CSE). Students: Submit your ETL scripts here. Make sure your commit message includes your name and roll number.
-# Software Architecture Assignment: Custom Python ETL Data Connector
+[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/b1x675tx)
+# SSN-college-software-architecture-Assignment
 
-Welcome to the official repository for submitting your Software Architecture assignment on building custom data connectors (ETL pipelines) in Python. This assignment is part of the Kyureeus EdTech program for SSN CSE students.
+# VirusTotal File Hash Analysis ETL Connector
 
----
-Guideline: Building and Managing Custom Data Connectors (ETL Pipeline) in Python
+A streamlined ETL connector for analyzing file hashes using the **VirusTotal API v3** and storing results in MongoDB.
 
-1. Setting Up the Connector Environment
-a. Choose Your API Provider: Identify a data provider and understand its Base URL, Endpoints, and Authentication.
-b. Understand the API Documentation: Focus on headers, query params, pagination, rate limits, and response structure.
+## 🚀 Quick Start
 
+### 1. Setup
+```bash
+git clone <your-repository-url>
+cd virustotal-etl-connector
 
-2. Secure API Authentication Using Environment Variables
-a. Create a `.env` File Locally: Store API keys and secrets as KEY=VALUE pairs.
-b. Load Environment Variables in Code: Use libraries like `dotenv` to securely load environment variables.
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
+# Install dependencies
+pip install requests pymongo python-dotenv
+```
 
-3. Design the ETL Pipeline
-Extract: Connect to the API, pass tokens/headers, and collect JSON data.
-Transform: Clean or reformat the data for MongoDB compatibility.
-Load: Store the transformed data into a MongoDB collection.
+### 2. Configure Environment
+Create a `.env` file:
+```env
+VT_API_KEY="your_virustotal_api_key_here"
+MONGO_URI="your_mongo_URI"
+MONGO_DB="Mongo_DB"
+COLLECTION_NAME="collection_name"
+```
 
+**Get API Key**: Create free account at [VirusTotal](https://www.virustotal.com/gui/join-us) → Profile → Generate API Key
 
-4. MongoDB Collection Strategy
-Use one collection per connector, e.g., `connector_name_raw`.
-Store ingestion timestamps to support audits or updates.
+### 3. Usage
 
+**Command Line:**
+```bash
+# Single hash
+python etl_connector.py d41d8cd98f00b204e9800998ecf8427e
 
-5. Iterative Testing & Validation
-Test for invalid responses, empty payloads, rate limits, and connectivity errors.
-Ensure consistent insertion into MongoDB.
+# Multiple hashes
+python etl_connector.py hash1 hash2 hash3
+```
 
+**Interactive Mode:**
+```bash
+python etl_connector.py
+# Choose: 1) File input (CSV/JSON) or 2) Manual entry
+```
 
-6. Git and Project Structure Guidelines
-a. Use a Central Git Repository: Clone the shared repo and create a new branch for your connector.
-b. Ignore Secrets: Add `.env` to `.gitignore` before the first commit.
-c. Push and Document: Write README.md with endpoint details, API usage, and example output.
+## 📊 API Details
 
+- **Endpoint**: `https://www.virustotal.com/api/v3/files/{hash}`
+- **Method**: GET
+- **Supported Hashes**: MD5 (32 chars), SHA-1 (40 chars), SHA-256 (64 chars)
+- **Rate Limit**: 4 requests/minute (free tier)
 
-Final Checklist for Students
-Understand API documentation
-Secure credentials in `.env`
-Build complete ETL script
-Validate MongoDB inserts
-Push code to your branch
-Include descriptive README
-Submit Pull Request
+## 📁 Input Formats
 
-## 📋 Assignment Overview
+**CSV:**
+```csv
+d41d8cd98f00b204e9800998ecf8427e
+5d41402abc4b2a76b9719d911017c592
+```
 
-**Goal:**  
-Develop a Python script to connect with an API provider, extract data, transform it for compatibility, and load it into a MongoDB collection. Follow secure coding and project structure practices as outlined below.
-
----
-
-## ✅ Submission Checklist
-
-- [ ] Choose a data provider (API) and understand its documentation
-- [ ] Secure all API credentials using a `.env` file
-- [ ] Build a complete ETL pipeline: Extract → Transform → Load (into MongoDB)
-- [ ] Test and validate your pipeline (handle errors, invalid data, rate limits, etc.)
-- [ ] Follow the provided Git project structure
-- [ ] Write a clear and descriptive `README.md` in your folder with API details and usage instructions
-- [ ] **Include your name and roll number in your commit messages**
-- [ ] Push your code to your branch and submit a Pull Request
-
----
-
-## 📦 Project Structure
-
-/your-branch-name/
-├── etl_connector.py
-├── .env
-├── requirements.txt
-├── README.md
-└── (any additional scripts or configs)
+**JSON:**
+```json
+{
+  "hashes": [
+    "d41d8cd98f00b204e9800998ecf8427e",
+    "5d41402abc4b2a76b9719d911017c592"
+  ]
+}
+```
 
 
-- **`.env`**: Store sensitive credentials; do **not** commit this file.
-- **`etl_connector.py`**: Your main ETL script.
-- **`requirements.txt`**: List all Python dependencies.
-- **`README.md`**: Instructions for your connector.
+## 📈 Example Queries
 
----
+**Find malicious files:**
+```javascript
+db.virustotal_scans.find({
+  "detection_stats.malicious": { $gt: 5 }
+})
+```
 
-## 🛡️ Secure Authentication
+**Files not in VirusTotal:**
+```javascript
+db.virustotal_scans.find({
+  "vt_found": false
+})
+```
 
-- Store all API keys/secrets in a local `.env` file.
-- Load credentials using the `dotenv` Python library.
-- Add `.env` to `.gitignore` before committing.
+## 📋 Requirements
 
----
+- Python 3.7+
+- MongoDB 4.0+
+- VirusTotal API key (free tier available)
 
-## 🗃️ MongoDB Guidelines
+## 🔒 Security
 
-- Use one MongoDB collection per connector (e.g., `connectorname_raw`).
-- Store ingestion timestamps for audit and update purposes.
-
----
-
-## 🧪 Testing & Validation
-
-- Check for invalid responses, empty payloads, rate limits, and connectivity issues.
-- Ensure data is correctly inserted into MongoDB.
+- Store API keys in `.env` file (never commit to Git)
+- Add `.env` to `.gitignore`
+- Use MongoDB authentication in production
 
 ---
 
-## 📝 Git & Submission Guidelines
-
-1. **Clone the repository** and create your own branch.
-2. **Add your code and documentation** in your folder/branch.
-3. **Do not commit** your `.env` or secrets.
-4. **Write clear commit messages** (include your name and roll number).
-5. **Submit a Pull Request** when done.
-
----
-
-## 💡 Additional Resources
-
-- [python-dotenv Documentation](https://saurabh-kumar.com/python-dotenv/)
-- [MongoDB Python Driver (PyMongo)](https://pymongo.readthedocs.io/en/stable/)
-- [API Documentation Example](https://restfulapi.net/)
-
----
-
-## 📢 Need Help?
-
-- Post your queries in the [KYUREEUS/SSN College - WhatsApp group](#) .
-- Discuss issues, share progress, and help each other.
-
----
-
-Happy coding! 🚀
+**Author:** Ravindran V | **Roll Number:** 3122225001701
+**Institution:** SSN College of Engineering

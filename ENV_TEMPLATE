@@ -1,0 +1,4 @@
+VT_API_KEY= insert_api_key
+MONGO_URI= your_mongo_ uri
+MONGO_DB_NAME= your_mongo_db_name
+MONGO_COLLECTION_NAME= your_mongo_collection_name
