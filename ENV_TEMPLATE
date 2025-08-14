@@ -1,0 +1,4 @@
+API_URL=<required_api_url>
+MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net
+MONGO_DB=<databse_name>
+MONGO_COLLECTION=<collection_name>
