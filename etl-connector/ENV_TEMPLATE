@@ -1,0 +1,4 @@
+OTX_API_KEY=your_api_key_here
+MONGO_URI=your_url
+DB_NAME=test_db
+COLLECTION_NAME=test_data
