@@ -1,0 +1,4 @@
+python-dotenv==1.0.1
+requests>=2.32.2
+pymongo==4.4.0
+tenacity==8.2.2

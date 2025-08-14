@@ -1,0 +1,4 @@
+GREYNOISE_API_KEY=<required_api_url>
+MONGO_URI=<MONGO_CONNECTION_URL>
+MONGO_DB=<databse_name>
+MONGO_COLLECTION=<collection_name>
