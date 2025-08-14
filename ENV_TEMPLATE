@@ -1,0 +1,12 @@
+SSL_LABS_API_URL=https://api.ssllabs.com/api/v3/analyze
+
+TARGET_DOMAIN=example.com
+
+REQUEST_TIMEOUT=30
+
+MONGO_URI=your_mongodb_connection_string
+
+MONGODB_DB=your_mongodb_database
+
+MONGODB_COLLECTION=your_mongodb_collection
+

@@ -1,135 +1,157 @@
-# SSN-college-software-architecture-Assignments-
-Assignment repository for building custom Python ETL data connectors (Kyureeus EdTech, SSN CSE). Students: Submit your ETL scripts here. Make sure your commit message includes your name and roll number.
-# Software Architecture Assignment: Custom Python ETL Data Connector
+# SSL Labs ETL Connector
 
-Welcome to the official repository for submitting your Software Architecture assignment on building custom data connectors (ETL pipelines) in Python. This assignment is part of the Kyureeus EdTech program for SSN CSE students.
+#### Author : S Neeharika (3122 22 5001 079)
 
----
-Guideline: Building and Managing Custom Data Connectors (ETL Pipeline) in Python
+<hr>
 
-1. Setting Up the Connector Environment
-a. Choose Your API Provider: Identify a data provider and understand its Base URL, Endpoints, and Authentication.
-b. Understand the API Documentation: Focus on headers, query params, pagination, rate limits, and response structure.
+## 📝 Project Overview
 
+This project connects to the [SSL Labs API](https://api.ssllabs.com/api/v3/) to:
 
-2. Secure API Authentication Using Environment Variables
-a. Create a `.env` File Locally: Store API keys and secrets as KEY=VALUE pairs.
-b. Load Environment Variables in Code: Use libraries like `dotenv` to securely load environment variables.
+1. Retrieve SSL/TLS configuration analysis for a given domain.
+2. Handle iterative polling until results are ready (or use cached results for speed).
+3. Store the analysis results in a MongoDB database.
 
-
-3. Design the ETL Pipeline
-Extract: Connect to the API, pass tokens/headers, and collect JSON data.
-Transform: Clean or reformat the data for MongoDB compatibility.
-Load: Store the transformed data into a MongoDB collection.
-
-
-4. MongoDB Collection Strategy
-Use one collection per connector, e.g., `connector_name_raw`.
-Store ingestion timestamps to support audits or updates.
-
-
-5. Iterative Testing & Validation
-Test for invalid responses, empty payloads, rate limits, and connectivity errors.
-Ensure consistent insertion into MongoDB.
-
-
-6. Git and Project Structure Guidelines
-a. Use a Central Git Repository: Clone the shared repo and create a new branch for your connector.
-b. Ignore Secrets: Add `.env` to `.gitignore` before the first commit.
-c. Push and Document: Write README.md with endpoint details, API usage, and example output.
-
-
-Final Checklist for Students
-Understand API documentation
-Secure credentials in `.env`
-Build complete ETL script
-Validate MongoDB inserts
-Push code to your branch
-Include descriptive README
-Submit Pull Request
-
-## 📋 Assignment Overview
-
-**Goal:**  
-Develop a Python script to connect with an API provider, extract data, transform it for compatibility, and load it into a MongoDB collection. Follow secure coding and project structure practices as outlined below.
 
 ---
 
-## ✅ Submission Checklist
+## 🌐 API Endpoint Used
 
-- [ ] Choose a data provider (API) and understand its documentation
-- [ ] Secure all API credentials using a `.env` file
-- [ ] Build a complete ETL pipeline: Extract → Transform → Load (into MongoDB)
-- [ ] Test and validate your pipeline (handle errors, invalid data, rate limits, etc.)
-- [ ] Follow the provided Git project structure
-- [ ] Write a clear and descriptive `README.md` in your folder with API details and usage instructions
-- [ ] **Include your name and roll number in your commit messages**
-- [ ] Push your code to your branch and submit a Pull Request
+### **Analyze API**
 
----
+Retrieves SSL/TLS configuration analysis for a given hostname.
 
-## 📦 Project Structure
+**Endpoint:**
 
-/your-branch-name/
-├── etl_connector.py
-├── .env
-├── requirements.txt
-├── README.md
-└── (any additional scripts or configs)
+GET [https://api.ssllabs.com/api/v3/analyze]()
 
-
-- **`.env`**: Store sensitive credentials; do **not** commit this file.
-- **`etl_connector.py`**: Your main ETL script.
-- **`requirements.txt`**: List all Python dependencies.
-- **`README.md`**: Instructions for your connector.
+**Common Parameters:**
+- `host` – The domain name to analyze (e.g., `www.ssllabs.com`).
+- `fromCache` – If `on`, use cached results when available.
+- `all` – If `done`, return full results in one call.
+- `maxAge` – Maximum age (in hours) for cached results.
 
 ---
 
-## 🛡️ Secure Authentication
+## ⚙️ Setup and Installation
 
-- Store all API keys/secrets in a local `.env` file.
-- Load credentials using the `dotenv` Python library.
-- Add `.env` to `.gitignore` before committing.
+<h5>1. Clone the repository</h5>
 
----
+```bash
+git clone https://github.com/Kyureeus-Edtech/custom-python-etl-data-connector-neeharika-s27/
+```
 
-## 🗃️ MongoDB Guidelines
+<h5>2. Create a Virtual Environment</h5>
 
-- Use one MongoDB collection per connector (e.g., `connectorname_raw`).
-- Store ingestion timestamps for audit and update purposes.
+```bash
+python -m venv venv
+```
 
----
+<h5>3. Activate the Virtual Environment</h5?>
 
-## 🧪 Testing & Validation
+<h6>Windows</h6>
 
-- Check for invalid responses, empty payloads, rate limits, and connectivity issues.
-- Ensure data is correctly inserted into MongoDB.
+```bash
+venv\Scripts\activate
+```
 
----
+<h5>4. Install dependencies</h5>
 
-## 📝 Git & Submission Guidelines
+```bash
+pip install -r requirements.txt 
+```
 
-1. **Clone the repository** and create your own branch.
-2. **Add your code and documentation** in your folder/branch.
-3. **Do not commit** your `.env` or secrets.
-4. **Write clear commit messages** (include your name and roll number).
-5. **Submit a Pull Request** when done.
+<h5>5. Create .env file</h5>
 
----
+```bash
+MONGODB_URI=mongodb://localhost:27017
+MONGODB_DB=ssn_etl
+MONGODB_COLLECTION=ssllabs_analyze_raw
+```
+<hr>
 
-## 💡 Additional Resources
+## 🚀 Usage
 
-- [python-dotenv Documentation](https://saurabh-kumar.com/python-dotenv/)
-- [MongoDB Python Driver (PyMongo)](https://pymongo.readthedocs.io/en/stable/)
-- [API Documentation Example](https://restfulapi.net/)
+<h5>Run the ETL pipeline</h5>
 
----
+```bash
+python etl_connector.py
+```
 
-## 📢 Need Help?
+<h4>Sample Data Inserted in MongoDB</h4>
 
-- Post your queries in the [KYUREEUS/SSN College - WhatsApp group](#) .
-- Discuss issues, share progress, and help each other.
+![Sample Data Inserted in MongoDB](mongodb_output.png)
 
----
+<h4>Progress Tracked in Terminal</h4>
 
-Happy coding! 🚀
+![Progress Tracked in Terminal](terminal_output.png)
+
+<hr>
+
+### 🛡️ Error Handling Mechanisms
+
+<hr>
+
+##### 1. Checking Rate Limit
+
+```bash
+if isinstance(data, dict) and "errors" in data:
+    for err in data["errors"]:
+        if "Rate limit" in err.get("message", ""):
+            print("Rate limit reached, retrying...")
+            time.sleep(RETRY_DELAY)
+            attempt += 1
+            continue
+```
+
+##### 2. Validate Basic API Response Structure
+
+```bash
+if not isinstance(data, dict) or "host" not in data:
+    print("Invalid API response structure.")
+    return None
+```
+
+##### 3. Empty Payload Check
+
+```bash
+if not data.get("endpoints"):
+    print("Empty payload returned by API.")
+    return None
+```
+
+##### 4. Connectivity Error
+
+```bash
+try:
+    response = requests.get(BASE_URL, params=params, timeout=30)
+    response.raise_for_status()
+    data = response.json()
+    ...
+    return data
+except requests.RequestException as e:
+    print(f"Connectivity error: {e}")
+    time.sleep(RETRY_DELAY)
+    attempt += 1
+```
+<hr>
+
+## 🗂️ Project Structure
+
+```bash
+custom-python-etl-data-connector-neeharika-s27/
+├── README.md                  # Project documentation
+├── requirements.txt           # Python dependencies
+├── .gitignore                 # Ignore .env, venv
+├── etl_connector.py           # Entry point to run the ETL process
+├── terminal_output.png        # Terminal output image screenshot      
+└── mongodb_output.png         # MongoDB Output image screenshot
+```
+
+<hr>
+
+## 📌 Summary 
+
+The SSL Labs Analyze API was used to perform automated SSL/TLS assessments for a target domain. The process followed an ETL workflow — extracting raw JSON response data from the API, transforming it to highlight key security metrics such as supported protocols, and certificate details, and loading the structured results into a usable storage format. Secure coding practices, including .gitignore usage, were applied to avoid exposing sensitive files in the Git repository. This streamlined approach enables efficient, repeatable security analysis and reporting.
+
+<hr>
