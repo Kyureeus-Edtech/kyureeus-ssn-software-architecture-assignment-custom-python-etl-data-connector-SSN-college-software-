@@ -1,0 +1,14 @@
+# ETL Connector Environment Configuration - Rithick R Rahul
+
+# OpenWeatherMap API Configuration
+API_BASE_URL=https://api.openweathermap.org/data/2.5
+API_KEY=<your_openweathermap_api_key>
+RATE_LIMIT_DELAY=<delay_in_seconds>
+
+# MongoDB Configuration
+MONGODB_URI=mongodb://<username>:<password>@<host>:<port>/
+DB_NAME=<your_database_name>
+COLLECTION_NAME=<your_collection_name>
+
+# Cities to get weather data for (comma-separated)
+CITIES=<comma_separated_city_list>
