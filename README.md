@@ -1,135 +1,137 @@
-# SSN-college-software-architecture-Assignments-
-Assignment repository for building custom Python ETL data connectors (Kyureeus EdTech, SSN CSE). Students: Submit your ETL scripts here. Make sure your commit message includes your name and roll number.
 # Software Architecture Assignment: Custom Python ETL Data Connector
+# DShield Top Attackers ETL Connector
 
-Welcome to the official repository for submitting your Software Architecture assignment on building custom data connectors (ETL pipelines) in Python. This assignment is part of the Kyureeus EdTech program for SSN CSE students.
+**Student Name:** Diya Seshan 
+**Roll Number:** 3122 22 5001 030 
+**Dept & Year:** CSE-A, 4th year
+**Date:** 13-08-2025
 
----
-Guideline: Building and Managing Custom Data Connectors (ETL Pipeline) in Python
+## Overview
 
-1. Setting Up the Connector Environment
-a. Choose Your API Provider: Identify a data provider and understand its Base URL, Endpoints, and Authentication.
-b. Understand the API Documentation: Focus on headers, query params, pagination, rate limits, and response structure.
-
-
-2. Secure API Authentication Using Environment Variables
-a. Create a `.env` File Locally: Store API keys and secrets as KEY=VALUE pairs.
-b. Load Environment Variables in Code: Use libraries like `dotenv` to securely load environment variables.
-
-
-3. Design the ETL Pipeline
-Extract: Connect to the API, pass tokens/headers, and collect JSON data.
-Transform: Clean or reformat the data for MongoDB compatibility.
-Load: Store the transformed data into a MongoDB collection.
+Python ETL pipeline that:
+    - **Extracts** daily Top Attackers feed from DShield 
+    - **Transforms** into structured MongoDB documents
+    - **Loads** into MongoDB with audit fields and deduplication
 
 
-4. MongoDB Collection Strategy
-Use one collection per connector, e.g., `connector_name_raw`.
-Store ingestion timestamps to support audits or updates.
+## API Provider Details
+
+**Provider:** DShield (SANS Internet Storm Center)  
+**Base URL:** https://www.dshield.org  
+**Endpoint:** `/ipsascii.html`  
+**Data Format:** ASCII/TXT (whitespace-delimited table)  
+**Authentication:** None required (public feed)  
+**Response Structure:** Text-based table with IP addresses and attack statistics
+
+### API Documentation Summary
+- **Headers:** Standard HTTP headers, no special authentication required
+- **Query Parameters:** None
+- **Pagination:** Single feed file (no pagination)
+- **Response Format:** ASCII text with tab/space delimited columns
+- **Update Frequency:** Daily updates
 
 
-5. Iterative Testing & Validation
-Test for invalid responses, empty payloads, rate limits, and connectivity errors.
-Ensure consistent insertion into MongoDB.
+## Usage
 
+### Test Run (No Database Writes)
+```bash
+python etl_connector.py --dry-run
+```
 
-6. Git and Project Structure Guidelines
-a. Use a Central Git Repository: Clone the shared repo and create a new branch for your connector.
-b. Ignore Secrets: Add `.env` to `.gitignore` before the first commit.
-c. Push and Document: Write README.md with endpoint details, API usage, and example output.
+### Production Run
+```bash
+python etl_connector.py
+```
 
+### Limit Records (for testing)
+```bash
+python etl_connector.py --limit 10
+```
 
-Final Checklist for Students
-Understand API documentation
-Secure credentials in `.env`
-Build complete ETL script
-Validate MongoDB inserts
-Push code to your branch
-Include descriptive README
-Submit Pull Request
+## Data Structure
 
-## 📋 Assignment Overview
+### Input Format (DShield Feed)
+The DShield feed contains lines like:
+```
+# DShield Top Attackers Report
+# Date: 2024-12-XX
+IP_Address    Reports    Targets    First_Seen    Last_Seen
+192.168.1.1   150        45         2024-12-01    2024-12-15
+10.0.0.1      89         23         2024-12-02    2024-12-14
+```
 
-**Goal:**  
-Develop a Python script to connect with an API provider, extract data, transform it for compatibility, and load it into a MongoDB collection. Follow secure coding and project structure practices as outlined below.
+### Output Format (MongoDB Documents)
+```json
+{
+  "_id": "ObjectId(...)",
+  "ip": "192.168.1.1",
+  "reports": "150",
+  "targets": "45",
+  "first_seen": "2024-12-01",
+  "last_seen": "2024-12-15",
+  "_ingested_at": "2024-12-15T10:30:00.123456+00:00",
+  "_source": "dshield_top_attackers",
+  "_source_url": "https://www.dshield.org/ipsascii.html",
+  "_source_row": "192.168.1.1   150        45         2024-12-01    2024-12-15",
+  "_row_hash": "abc123...",
+  "_http_meta": {
+    "etag": "\"abc123\"",
+    "last_modified": "Mon, 15 Dec 2024 10:00:00 GMT",
+    "content_length": "2048",
+    "content_type": "text/plain"
+  }
+}
+```
 
----
+## Features
 
-## ✅ Submission Checklist
+### ETL Pipeline Components
 
-- [ ] Choose a data provider (API) and understand its documentation
-- [ ] Secure all API credentials using a `.env` file
-- [ ] Build a complete ETL pipeline: Extract → Transform → Load (into MongoDB)
-- [ ] Test and validate your pipeline (handle errors, invalid data, rate limits, etc.)
-- [ ] Follow the provided Git project structure
-- [ ] Write a clear and descriptive `README.md` in your folder with API details and usage instructions
-- [ ] **Include your name and roll number in your commit messages**
-- [ ] Push your code to your branch and submit a Pull Request
+**Extract:**
+- HTTP requests with retry logic and timeout handling
+- Respects rate limits with exponential backoff
+- Captures HTTP metadata (ETag, Last-Modified, etc.)
 
----
+**Transform:**
+- Parses ASCII table format with flexible column detection
+- Extracts and validates IPv4 addresses
+- Normalizes field names for MongoDB compatibility
+- Adds audit fields (ingestion timestamp, source tracking)
 
-## 📦 Project Structure
+**Load:**
+- Upserts based on row hash for idempotent operations
+- Creates unique indexes for deduplication
+- Bulk write operations for efficiency
+- Error handling for MongoDB connection issues
 
-/your-branch-name/
-├── etl_connector.py
-├── .env
-├── requirements.txt
-├── README.md
-└── (any additional scripts or configs)
+## Testing & Validation
 
+### Test Scenarios Covered
+- Valid API responses
+- Empty payloads
+- Malformed data
+- Network timeouts
+- Rate limiting
+- MongoDB connection issues
+- Duplicate data handling
 
-- **`.env`**: Store sensitive credentials; do **not** commit this file.
-- **`etl_connector.py`**: Your main ETL script.
-- **`requirements.txt`**: List all Python dependencies.
-- **`README.md`**: Instructions for your connector.
+### Sample Test Output
+```bash
+$ python etl_connector.py --dry-run --limit 3
+[INFO] Extracted 3 rows from https://www.dshield.org/ipsascii.html
+[DRY-RUN] Preview of transformed docs:
+  1. {'ip': '192.168.1.1', '_ingested_at': '2024-12-15T10:30:00.123456+00:00', '_row_hash': 'abc123...', '_source_row': '192.168.1.1   150        45         2024-12-01    2024-12-15'}
+  2. {'ip': '10.0.0.1', '_ingested_at': '2024-12-15T10:30:00.123456+00:00', '_row_hash': 'def456...', '_source_row': '10.0.0.1      89         23         2024-12-02    2024-12-14'}
+  3. {'ip': '172.16.0.1', '_ingested_at': '2024-12-15T10:30:00.123456+00:00', '_row_hash': 'ghi789...', '_source_row': '172.16.0.1     67         12         2024-12-03    2024-12-13'}
+[DRY-RUN] Skipping MongoDB write.
+```
 
----
+## MongoDB Collection Details
 
-## 🛡️ Secure Authentication
+**Collection Name:** `dshield_top_attackers_raw`  
+**Database:** `dshield_etl` (configurable)  
+**Indexes:** 
+- `_row_hash` (unique) - for deduplication
+- `ip` - for IP-based queries
+- `_ingested_at` - for time-based queries
 
-- Store all API keys/secrets in a local `.env` file.
-- Load credentials using the `dotenv` Python library.
-- Add `.env` to `.gitignore` before committing.
-
----
-
-## 🗃️ MongoDB Guidelines
-
-- Use one MongoDB collection per connector (e.g., `connectorname_raw`).
-- Store ingestion timestamps for audit and update purposes.
-
----
-
-## 🧪 Testing & Validation
-
-- Check for invalid responses, empty payloads, rate limits, and connectivity issues.
-- Ensure data is correctly inserted into MongoDB.
-
----
-
-## 📝 Git & Submission Guidelines
-
-1. **Clone the repository** and create your own branch.
-2. **Add your code and documentation** in your folder/branch.
-3. **Do not commit** your `.env` or secrets.
-4. **Write clear commit messages** (include your name and roll number).
-5. **Submit a Pull Request** when done.
-
----
-
-## 💡 Additional Resources
-
-- [python-dotenv Documentation](https://saurabh-kumar.com/python-dotenv/)
-- [MongoDB Python Driver (PyMongo)](https://pymongo.readthedocs.io/en/stable/)
-- [API Documentation Example](https://restfulapi.net/)
-
----
-
-## 📢 Need Help?
-
-- Post your queries in the [KYUREEUS/SSN College - WhatsApp group](#) .
-- Discuss issues, share progress, and help each other.
-
----
-
-Happy coding! 🚀
