@@ -1,0 +1,6 @@
+BASE_URL=your_base_url
+ENDPOINT=your_endpoint
+MONGO_URI=your_mongo_uri
+DB_NAME=your_database_name
+COLLECTION_NAME=your_collection_name
+CONNECTOR_NAME=your_connector_name
