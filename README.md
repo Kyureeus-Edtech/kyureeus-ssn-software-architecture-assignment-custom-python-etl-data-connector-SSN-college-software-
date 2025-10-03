@@ -1,135 +1,144 @@
-# SSN-college-software-architecture-Assignments-
-Assignment repository for building custom Python ETL data connectors (Kyureeus EdTech, SSN CSE). Students: Submit your ETL scripts here. Make sure your commit message includes your name and roll number.
-# Software Architecture Assignment: Custom Python ETL Data Connector
+# Custom Python ETL Data Connector
 
-Welcome to the official repository for submitting your Software Architecture assignment on building custom data connectors (ETL pipelines) in Python. This assignment is part of the Kyureeus EdTech program for SSN CSE students.
+## Project Overview
 
----
-Guideline: Building and Managing Custom Data Connectors (ETL Pipeline) in Python
+This repository contains a comprehensive ETL (Extract, Transform, Load) data pipeline solution that integrates multiple cybersecurity data sources into MongoDB databases. The project is organized into two main categories, each focusing on different types of security intelligence data collection and storage.
 
-1. Setting Up the Connector Environment
-a. Choose Your API Provider: Identify a data provider and understand its Base URL, Endpoints, and Authentication.
-b. Understand the API Documentation: Focus on headers, query params, pagination, rate limits, and response structure.
+## Repository Structure
 
+```
+custom-python-etl-data-connector/
+├── Cat1_All_Endpoints/          # Shodan API Integration
+│   ├── shodan_connector.py      # Main Shodan ETL connector
+│   ├── shodan_README.md         # Shodan-specific documentation
+│   └── shodan_requirements.txt  # Shodan dependencies
+├── Cat2_All_Endpoints/          # MITRE ATT&CK TAXII Integration
+│   ├── MittreTaxiAPI_connector.py  # MITRE TAXII ETL connector
+│   ├── MittreTaxi_README.md        # MITRE TAXII documentation
+│   └── requirements.txt            # MITRE TAXII dependencies
+├── ENV_TEMPLATE                 # Environment variables template
+└── README.md                   # This file
+```
 
-2. Secure API Authentication Using Environment Variables
-a. Create a `.env` File Locally: Store API keys and secrets as KEY=VALUE pairs.
-b. Load Environment Variables in Code: Use libraries like `dotenv` to securely load environment variables.
+## Categories Overview
 
+### Cat1_All_Endpoints: Shodan Security Intelligence
 
-3. Design the ETL Pipeline
-Extract: Connect to the API, pass tokens/headers, and collect JSON data.
-Transform: Clean or reformat the data for MongoDB compatibility.
-Load: Store the transformed data into a MongoDB collection.
+Purpose: Collects network security intelligence data from Shodan, the world's first search engine for Internet-connected devices.
 
+Key Features:
+- Device Discovery: Searches for IoT devices, servers, and network infrastructure
+- Vulnerability Scanning: Identifies exposed services and potential security risks
+- Geolocation Data: Maps device locations and network topology
+- Service Fingerprinting: Identifies running services, software versions, and configurations
+- Rate Limiting: Implements proper API rate limiting to respect Shodan's usage policies
 
-4. MongoDB Collection Strategy
-Use one collection per connector, e.g., `connector_name_raw`.
-Store ingestion timestamps to support audits or updates.
+Data Sources:
+- Shodan REST API endpoints
+- Real-time device scanning results
+- Historical vulnerability data
+- Network service information
 
+MongoDB Storage: Stores results in configurable databases with timestamped entries for tracking device exposure over time.
 
-5. Iterative Testing & Validation
-Test for invalid responses, empty payloads, rate limits, and connectivity errors.
-Ensure consistent insertion into MongoDB.
+### Cat2_All_Endpoints: MITRE ATT&CK Threat Intelligence
 
+Purpose: Extracts structured threat intelligence from the MITRE ATT&CK framework via TAXII 2.1 protocol.
 
-6. Git and Project Structure Guidelines
-a. Use a Central Git Repository: Clone the shared repo and create a new branch for your connector.
-b. Ignore Secrets: Add `.env` to `.gitignore` before the first commit.
-c. Push and Document: Write README.md with endpoint details, API usage, and example output.
+Key Features:
+- Attack Patterns: Collects detailed information about adversary tactics and techniques
+- Threat Actor Profiles: Gathers intelligence on known threat groups and their methods
+- Mitigation Strategies: Provides defensive measures and detection methods
+- STIX Object: Processes standardized threat intelligence objects
+- Version Tracking: Maintains historical versions of threat intelligence data
 
+Data Sources:
+- MITRE ATT&CK TAXII 2.1 API
+- Collections, manifests, objects, and versions
+- Structured threat intelligence in STIX format
+- Real-time updates from MITRE's threat research
 
-Final Checklist for Students
-Understand API documentation
-Secure credentials in `.env`
-Build complete ETL script
-Validate MongoDB inserts
-Push code to your branch
-Include descriptive README
-Submit Pull Request
+MongoDB Storage: Organizes threat intelligence into structured collections with relationship mapping and temporal tracking.
 
-## 📋 Assignment Overview
+## Unified MongoDB Integration
 
-**Goal:**  
-Develop a Python script to connect with an API provider, extract data, transform it for compatibility, and load it into a MongoDB collection. Follow secure coding and project structure practices as outlined below.
+Both connectors implement a robust MongoDB storage strategy:
 
----
+### Database Architecture
+- Separate Databases: Each connector uses dedicated databases to prevent data conflicts
+- Timestamped Records: All entries include ingestion timestamps for audit trails
+- Structured Collections: Data is organized into logical collections based on source and type
+- Error Handling: Comprehensive error recovery and connection management
 
-## ✅ Submission Checklist
+## Getting Started
 
-- [ ] Choose a data provider (API) and understand its documentation
-- [ ] Secure all API credentials using a `.env` file
-- [ ] Build a complete ETL pipeline: Extract → Transform → Load (into MongoDB)
-- [ ] Test and validate your pipeline (handle errors, invalid data, rate limits, etc.)
-- [ ] Follow the provided Git project structure
-- [ ] Write a clear and descriptive `README.md` in your folder with API details and usage instructions
-- [ ] **Include your name and roll number in your commit messages**
-- [ ] Push your code to your branch and submit a Pull Request
+### Prerequisites
+- Python 3.7 or higher
+- MongoDB (local or remote instance)
+- API keys for respective services
+- Internet connectivity for API access
 
----
+### Quick Setup
 
-## 📦 Project Structure
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd custom-python-etl-data-connector
+```
 
-/your-branch-name/
-├── etl_connector.py
-├── .env
-├── requirements.txt
-├── README.md
-└── (any additional scripts or configs)
+2. Set up environment variables:
+```bash
+cp ENV_TEMPLATE .env
+# Edit .env with your actual API keys and MongoDB settings
+```
 
+3. Install dependencies for both categories:
+```bash
+# For Shodan connector
+cd Cat1_All_Endpoints
+pip install -r shodan_requirements.txt
 
-- **`.env`**: Store sensitive credentials; do **not** commit this file.
-- **`etl_connector.py`**: Your main ETL script.
-- **`requirements.txt`**: List all Python dependencies.
-- **`README.md`**: Instructions for your connector.
+# For MITRE TAXII connector
+cd ../Cat2_All_Endpoints
+pip install -r requirements.txt
+```
 
----
+4. Configure MongoDB:
+   - Ensure MongoDB is running on your system
+   - Update connection strings in `.env` file
+   - Create appropriate databases and collections
 
-## 🛡️ Secure Authentication
+### Environment Configuration
 
-- Store all API keys/secrets in a local `.env` file.
-- Load credentials using the `dotenv` Python library.
-- Add `.env` to `.gitignore` before committing.
+The project uses the following environment variables:
 
----
+#### Cat1 (Shodan) Configuration:
+```env
+SHODAN_API_KEY=your_shodan_api_key
+MONGO_URI=mongodb://localhost:27017
+DB_NAME_shodan=securitydb
+COLLECTION_NAME_shodan=shodan_results
+```
 
-## 🗃️ MongoDB Guidelines
+#### Cat2 (MITRE TAXII) Configuration:
+```env
+MONGO_URI_taxii=mongodb://localhost:27017/taxii_db
+TAXII_API="https://attack-taxii.mitre.org/api/v21"
+ACCEPT_HEADER="application/taxii+json;version=2.1"
+```
 
-- Use one MongoDB collection per connector (e.g., `connectorname_raw`).
-- Store ingestion timestamps for audit and update purposes.
+## Usage
 
----
+### Running Individual Connectors
 
-## 🧪 Testing & Validation
+Shodan Connector:
+```bash
+cd Cat1_All_Endpoints
+python shodan_connector.py
+```
 
-- Check for invalid responses, empty payloads, rate limits, and connectivity issues.
-- Ensure data is correctly inserted into MongoDB.
-
----
-
-## 📝 Git & Submission Guidelines
-
-1. **Clone the repository** and create your own branch.
-2. **Add your code and documentation** in your folder/branch.
-3. **Do not commit** your `.env` or secrets.
-4. **Write clear commit messages** (include your name and roll number).
-5. **Submit a Pull Request** when done.
-
----
-
-## 💡 Additional Resources
-
-- [python-dotenv Documentation](https://saurabh-kumar.com/python-dotenv/)
-- [MongoDB Python Driver (PyMongo)](https://pymongo.readthedocs.io/en/stable/)
-- [API Documentation Example](https://restfulapi.net/)
-
----
-
-## 📢 Need Help?
-
-- Post your queries in the [KYUREEUS/SSN College - WhatsApp group](#) .
-- Discuss issues, share progress, and help each other.
-
----
-
-Happy coding! 🚀
+MITRE TAXII Connector:
+```bash
+cd Cat2_All_Endpoints
+python MittreTaxiAPI_connector.py
+```

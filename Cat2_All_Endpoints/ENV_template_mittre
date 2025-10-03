@@ -1,0 +1,4 @@
+#cat2
+MONGO_URI_taxii=mongodb://localhost:27017/taxii_db
+TAXII_API="https://attack-taxii.mitre.org/api/v21"
+ACCEPT_HEADER="application/taxii+json;version=2.1"

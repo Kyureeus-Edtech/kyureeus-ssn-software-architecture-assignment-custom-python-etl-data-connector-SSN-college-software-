@@ -1,0 +1,5 @@
+#cat1
+SHODAN_API_KEY=dummykey
+MONGO_URI=mongodb://localhost:27017
+DB_NAME_shodan=securitydb
+COLLECTION_NAME_shodan=shodan_results
