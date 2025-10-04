@@ -1,0 +1,3 @@
+MONGO_URI = <your_mongo_uri>
+TAXII_API="https://attack-taxii.mitre.org/api/v21"
+ACCEPT_HEADER="application/taxii+json;version=2.1"
