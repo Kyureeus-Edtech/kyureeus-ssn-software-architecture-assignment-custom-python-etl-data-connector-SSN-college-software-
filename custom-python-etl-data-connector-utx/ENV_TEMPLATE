@@ -1,0 +1,4 @@
+OTX_API_KEY=key
+OTX_BASE_URL=https://otx.alienvault.com
+MONGO_URI = url
+MONGO_DB=colection_name
