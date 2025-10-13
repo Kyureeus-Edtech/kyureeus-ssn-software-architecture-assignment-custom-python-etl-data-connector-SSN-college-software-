@@ -1,126 +1,78 @@
-GreyNoise RIOT ETL Connector
-Overview
-This project is a simple Extract → Transform → Load (ETL) pipeline that fetches IP intelligence data from the GreyNoise API and stores it into MongoDB for further analysis.
-The connector uses the GreyNoise Community API to retrieve information on whether a given IP address is part of RIOT (benign infrastructure like public DNS, content delivery networks, etc.).
+🧠 GreyNoise Multi-Endpoint ETL Data Connector
 
-Features
-Extracts structured JSON data from the GreyNoise API.
+Student Name: G Harikumar
+Roll Number: 3122225001033
 
-Transforms (pass-through) and loads data directly into MongoDB.
+📘 Overview
 
-Adds ETL metadata (timestamp, source, version) to each stored record.
+This project is part of the Software Architecture – ETL Data Connector Assignment (Kyureeus EdTech, SSN CSE).
+It extends the earlier single-endpoint connector to handle multiple API endpoints from GreyNoise — a threat intelligence provider.
 
-Uses environment variables from .env file for configuration.
+The ETL pipeline follows:
+Extract → Transform → Load (ETL)
 
-Implements logging for easier debugging and monitoring.
+Each endpoint’s data is extracted, optionally transformed, and stored into a MongoDB collection for analysis or reporting.
 
-Requirements
-Python 3.7+
+⚙️ Architecture
+🔹 Pipeline Stages
 
-MongoDB instance running locally or remotely.
+Extract:
 
-GreyNoise API key (Community API or Enterprise API).
+Connects to multiple GreyNoise endpoints via REST API calls.
 
-Installation
-Clone this repository:
+Each endpoint is called sequentially, and responses are validated.
 
-bash
-Copy
-Edit
-git clone https://github.com/your-username/greynoise-riot-etl.git
-cd greynoise-riot-etl
-Create a virtual environment (optional but recommended):
+Transform:
 
-bash
-Copy
-Edit
-python -m venv venv
-source venv/bin/activate     # macOS/Linux
-venv\Scripts\activate        # Windows
-Install dependencies:
+Basic validation and structuring of JSON payloads.
 
-bash
-Copy
-Edit
-pip install -r requirements.txt
-Example requirements.txt:
+Adds module metadata (endpoint name, fetch timestamp, etc.).
 
-nginx
-Copy
-Edit
-requests
-python-dotenv
-pymongo
-Create a .env file in the project directory:
+Load:
 
-ini
-Copy
-Edit
+Inserts each endpoint’s result into a MongoDB collection.
+
+Includes ingestion timestamps for tracking and versioning.
+
+🌐 Endpoints Used
+
+The connector fetches data from multiple GreyNoise API modules (v3):
+
+Endpoint	Description	Example URL
+/v3/ping	Tests API connectivity	https://api.greynoise.io/v3/ping
+
+/v3/community/{ip}	Community lookup for IP reputation	https://api.greynoise.io/v3/community/8.8.8.8
+
+/v3/ip/{ip}	Detailed IP context data	https://api.greynoise.io/v3/ip/8.8.8.8
+
+/v3/gnql/query	Run GNQL queries for noise data	https://api.greynoise.io/v3/gnql/query?query=last_seen:1d
+
+/v3/gnql/stats	Statistics summary for GNQL queries	https://api.greynoise.io/v3/gnql/stats?query=last_seen:30d
+
+/v3/noise/ips/{ip}/daily-summary	Daily noise activity summary per IP	https://api.greynoise.io/v3/noise/ips/8.8.8.8/daily-summary
+
+/v3/ip/similar/{ip}	Finds IPs similar in behavior	https://api.greynoise.io/v3/ip/similar/8.8.8.8
+
+/v3/tags	Lists GreyNoise tag metadata	https://api.greynoise.io/v3/tags
+🔑 Secure Configuration
+
+All credentials and environment settings are stored securely in a .env file (not committed to Git).
+
+Example .env
 GREYNOISE_API_KEY=your_api_key_here
 MONGO_URI=mongodb://localhost:27017
 MONGO_DB=threat_intel
-COLLECTION_NAME=greynoise_riot_raw
-Usage
-Run the ETL connector:
+COLLECTION_NAME=greynoise_full
+TARGET_IP=8.8.8.8
 
-bash
-Copy
-Edit
-python etl_connector.py
-How It Works
-Extract
-Sends an HTTP GET request to:
+.gitignore
+.env
+__pycache__/
 
-bash
-Copy
-Edit
-https://api.greynoise.io/v3/community/8.8.8.8
-with your API key to retrieve IP intelligence data.
-
-Transform
-No major transformation is performed; data is passed through as-is.
-
-Load
-Inserts the result into MongoDB with additional ETL metadata:
-
-json
-Copy
-Edit
-{
-  "ip": "8.8.8.8",
-  "riot": true,
-  "classification": "benign",
-  "name": "Google Public DNS",
-  "etl": {
-    "source": "greynoise_riot",
-    "ingested_at": "2025-08-14T00:00:00Z",
-    "version": 1
-  }
-}
-Example Output in MongoDB
-json
-Copy
-Edit
-{
-  "_id": ObjectId("64d9c0f23e45f12ab8c3e4b5"),
-  "ip": "8.8.8.8",
-  "noise": false,
-  "riot": true,
-  "classification": "benign",
-  "name": "Google Public DNS",
-  "link": "https://viz.greynoise.io/riot/8.8.8.8",
-  "last_seen": "2025-08-14",
-  "http": {
-    "status_code": 200,
-    "fetched_at": "2025-08-14T00:00:00Z"
-  },
-  "etl": {
-    "source": "greynoise_riot",
-    "ingested_at": "2025-08-14T00:00:01Z",
-    "version": 1
-  }
-}
-Notes
-The script is currently hardcoded to fetch data for 8.8.8.8 (Google DNS). You can modify the BASE_URL to accept dynamic IP addresses or loop through a list.
-
-The Community API has request limits (about 50 requests/day). For higher limits and additional fields, use the Enterprise API.
+🧩 Project Structure
+/greynoise-multi-endpoint/
+├── etl_connector.py
+├── .env
+├── requirements.txt
+├── README.md
+└── logs/ (optional for extended logging)
