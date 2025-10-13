@@ -1,1 +1,5 @@
-GREYNOISE_API_KEY = my_key
+
+MONGO_URI=mongourl
+MONGO_DB=threat_intel
+COLLECTION_NAME=greynoise_raw
+GREYNOISE_API_KEY = your_key
