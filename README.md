@@ -1,9 +1,5 @@
 # CIRCL Passive DNS ETL Data Connector
 
-**Author:** Kavin (Roll Number: 302004)  
-**Assignment:** Software Architecture - Custom Python ETL Data Connector  
-**API Provider:** CIRCL Passive DNS  
-**Date:** December 2024
 
 ## 📋 Overview
 
@@ -42,48 +38,6 @@ This project implements a complete ETL (Extract, Transform, Load) pipeline for t
 - MongoDB instance (local or remote)
 - CIRCL Passive DNS API credentials
 
-### Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone <repository-url>
-   cd custom-python-etl-data-connector-Kavin302004-1
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Set up environment variables:**
-   ```bash
-   cp env_template.txt .env
-   # Edit .env with your actual credentials
-   ```
-
-4. **Configure MongoDB:**
-   - Ensure MongoDB is running on your system
-   - Update `MONGODB_URI` in `.env` if using remote MongoDB
-
-### Configuration
-
-Create a `.env` file with the following variables:
-
-```env
-# CIRCL Passive DNS API Credentials
-CIRCL_USERNAME=your_username_here
-CIRCL_PASSWORD=your_password_here
-
-# MongoDB Configuration
-MONGODB_URI=mongodb://localhost:27017/
-MONGODB_DATABASE=etl_data
-MONGODB_COLLECTION=circl_passivedns_raw
-
-# API Configuration
-CIRCL_BASE_URL=https://www.circl.lu
-API_TIMEOUT=30
-MAX_RETRIES=3
-```
 
 ## 📖 API Documentation
 
