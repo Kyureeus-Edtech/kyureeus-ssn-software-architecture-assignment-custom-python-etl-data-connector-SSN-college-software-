@@ -1,0 +1,21 @@
+# MongoDB Configuration
+MONGO_URI= your_mongo_ uri
+DB_NAME= your_mongo_db_name
+
+# CSV Pipeline Settings
+MAX_RECORDS_CSV=100
+CSV_DATA_DIR=data
+
+# RSS Pipeline Settings
+MAX_RECORDS_RSS=100
+# Comma-separated list of specific RSS feeds to fetch (leave empty for all)
+# Available: warnings,blog,blog_en,daily_reports,current,specials
+RSS_FEEDS=
+
+# Pipeline Control
+RUN_CSV_PIPELINE=true
+RUN_RSS_PIPELINE=true
+
+# Data Loading Options
+CLEAN_BEFORE_LOAD=true
+USE_UPSERT=false
