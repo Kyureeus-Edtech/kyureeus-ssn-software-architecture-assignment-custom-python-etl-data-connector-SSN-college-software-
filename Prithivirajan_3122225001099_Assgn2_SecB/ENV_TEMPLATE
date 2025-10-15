@@ -1,0 +1,12 @@
+# ENV_TEMPLATE - copy to .env and fill the values (DO NOT commit .env)
+SONARQUBE_URL=http://localhost:9000         # base URL of SonarQube instance (no trailing slash)
+SONARQUBE_TOKEN=YOUR_SONAR_TOKEN           # generate in SonarQube UI (Administration -> My Account -> Security -> Tokens)
+
+MONGO_URI=mongodb://localhost:27017/
+MONGO_DB=etl_db
+
+# Optional tuning
+PAGE_SIZE=500
+REQUEST_SLEEP=0.3
+MEASURES_CHUNK=50
+REQUEST_TIMEOUT=30
