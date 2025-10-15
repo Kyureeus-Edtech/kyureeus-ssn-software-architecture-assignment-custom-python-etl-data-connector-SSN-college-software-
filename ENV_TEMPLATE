@@ -1,0 +1,8 @@
+# Copy this file to .env and fill in the values.
+MONGO_URI=<your_mongo_uri_here>
+# Optional: Override base URL if you want; default used in code is the API endpoints provided.
+OSV_BASE_URL=https://api.osv.dev
+# Optional sample payloads (JSON strings). You can leave them empty to use defaults in the script.
+DETERMINE_VERSION_PAYLOAD={}
+QUERY_PAYLOAD={}
+QUERYBATCH_PAYLOAD=[]
