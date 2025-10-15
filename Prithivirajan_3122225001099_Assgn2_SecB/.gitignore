@@ -1,0 +1,18 @@
+# Environment variables (do not push real API keys)
+.env
+
+# Virtual environment folder
+venv/
+
+# Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
