@@ -1,0 +1,5 @@
+MONGO_URI=<your_mongo_uri_here>
+OSV_BASE_URL=https://api.osv.dev
+DETERMINE_VERSION_PAYLOAD={}
+QUERY_PAYLOAD={}
+QUERYBATCH_PAYLOAD=[]
