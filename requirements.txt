@@ -1,0 +1,17 @@
+# Core dependencies for CIRCL Passive DNS ETL Connector
+requests>=2.31.0
+pymongo>=4.6.0
+python-dotenv>=1.0.0
+urllib3>=2.0.0
+
+# Data processing and validation
+pandas>=2.0.0
+jsonschema>=4.19.0
+
+# Logging and monitoring
+structlog>=23.1.0
+
+# Testing (optional)
+pytest>=7.4.0
+pytest-mock>=3.11.0
+
