@@ -1,0 +1,22 @@
+# Copy this file to .env and update values if needed.
+
+# API configuration
+IPAPI_BASE=http://ip-api.com
+IPAPI_USER_AGENT=ipapi-etl/1.0 (student-assignment)
+
+# MongoDB configuration
+MONGO_URI=mongodb://localhost:27017
+MONGO_DB=ipapi_etl
+MONGO_COLLECTION=lookups
+
+# ETL parameters
+BATCH_SIZE=50
+RATE_LIMIT_SINGLE=45
+RATE_LIMIT_BATCH=15
+REQUEST_TIMEOUT=10
+MAX_RETRIES=5
+RETRY_BACKOFF_SECONDS=2
+
+
+
+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
