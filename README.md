@@ -1,26 +1,23 @@
-# OTX IPv4 General Threat Intelligence API
+# Wayback Machine General Website Archive API
 
-This project provides a custom ETL connector to interact with the **AlienVault OTX (Open Threat Exchange)** API to fetch threat intelligence details for a given IPv4 address.
-
+This project provides a custom ETL connector to interact with the Wayback Machine API for fetching historical snapshot details for any website URL
 ---
 
-## ⚙️ Setup Instructions
+## Setup Instructions
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/otx_ipv4_general.git
-cd otx_ipv4_general
+git clone <your-repo-url>
+cd repo-name
 ```
 
 
 ### 2. Install Dependencies
 ```bash
-pip install requests
+pip install -r requirements.txt
 ```
 
 ### 3. Create and Activate Virtual Environment
-
-CHECKKK
 ```bash
 python -m venv venv
 # On Windows
@@ -38,31 +35,28 @@ cp ENV_TEMPLATE .env
 
 ### 5. Run the Connector
 
-Run for a single IP:
+Run for a url:
 ```bash
-python etl_connector.py 8.8.8.8
+python etl_connector.py https://www.example.com
 ```
-
-Run for multiple IPs:
-```bash
-python etl_connector.py 8.8.8.8 1.1.1.1
-```
-If no IP is provided, the script defaults to 8.8.8.8.
-
 ---
 
-## API Endpoint Details
-**Base URL:** `https://otx.alienvault.com/api/v1/indicators/IPv4/<IPv4_Address>/general`
+## API Endpoints Details
 
-Method:
-GET
+**1. Base URL:** `http://archive.org/wayback/available`
 
-Headers:
-json
-{
-  "X-OTX-API-KEY": "<Your_API_Key>",
-  "Content-Type": "application/json"
-}
+Method: `GET`
+
+
+**2. Base URL:** `https://web.archive.org/cdx/search/cdx`
+
+Method: `GET`
+
+
+**3. Base URL:** `https://web.archive.org/web/timemap/json/<URL>`
+
+Method: `GET`
+
 
 ---
 
@@ -71,13 +65,16 @@ json
 
 ### Logs
 
+
+
+
 ### MongoDB
 
 
+
+
 ## Author
-**Name:** Niya  
-**Role:** Developer  
-**Contact:** [youremail@example.com]  
+**Name:** Aashika Jetti  
+**Roll No.:** 3122225001050 
 
 ---
-
