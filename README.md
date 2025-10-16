@@ -65,10 +65,16 @@ Method: `GET`
 
 ### Logs
 
+<img width="1721" height="706" alt="image" src="https://github.com/user-attachments/assets/8baae860-b3ec-4b4b-bd53-f8864fcb9b9a" />
 
 
 
 ### MongoDB
+<img width="1431" height="458" alt="image" src="https://github.com/user-attachments/assets/cd7eb094-256c-4aa9-9a1d-ef7b0f5f0e2b" />
+
+<img width="1416" height="537" alt="image" src="https://github.com/user-attachments/assets/fda87f70-b5c9-4f4f-b240-72f84903cc4b" />
+
+
 
 
 
