@@ -202,18 +202,18 @@ The pipeline is pre-configured to test 8 major domains:
 
 ## Output Screenshots
 
-**Terminal Output**
+### Terminal Output
 ![Terminal Output](1.png)
 ![Terminal Output](2.png)
 ![Terminal Output](3.png)
 ![Terminal Output](4.png)
 ![Terminal Output](5.png)
 
-**MongoDB Document View**
+### MongoDB Document View
 ![MongoDB Output](6.png)
 ![MongoDB Output](7.png)
 ![MongoDB Output](8.png)
 ![MongoDB Output](9.png)
 ![MongoDB Output](10.png)
-![MongoDB Output](11.png)
+
 ---
