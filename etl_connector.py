@@ -7,7 +7,6 @@ from requests.adapters import HTTPAdapter, Retry
 from pymongo import MongoClient, errors
 from dotenv import load_dotenv
 
-
 load_dotenv()
 
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
