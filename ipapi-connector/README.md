@@ -20,7 +20,7 @@ All extracted data is cleaned, transformed for MongoDB compatibility, and stored
 ### 1. Clone the Repository
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/ckritk/kyureeus-ssn-software-architecture-assignment-custom-python-etl-data-connector-SSN-college-software-/edit/3122225001066_Krithika_C_CSE_B_Assignment_2/
 cd ipapi_connector
 ```
 
