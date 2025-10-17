@@ -1,7 +1,0 @@
-requests
-python-dotenv
-<<<<<<< HEAD
-pymongo
-=======
-pymongo
->>>>>>> feedback
