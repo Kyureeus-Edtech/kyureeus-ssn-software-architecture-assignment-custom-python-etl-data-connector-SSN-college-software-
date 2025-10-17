@@ -1,0 +1,4 @@
+BASE_URL=https://api.filterlists.com
+MONGO_URI=your_mongodb_connection_string
+DB_NAME=your_database_name
+REQUEST_TIMEOUT=your_request_timeout_in_seconds

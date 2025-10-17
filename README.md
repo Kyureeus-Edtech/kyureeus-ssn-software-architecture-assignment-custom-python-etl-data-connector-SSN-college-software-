@@ -1,135 +1,197 @@
-# SSN-college-software-architecture-Assignments-
-Assignment repository for building custom Python ETL data connectors (Kyureeus EdTech, SSN CSE). Students: Submit your ETL scripts here. Make sure your commit message includes your name and roll number.
-# Software Architecture Assignment: Custom Python ETL Data Connector
+# FilterLists API — Custom Python ETL Data Connector
 
-Welcome to the official repository for submitting your Software Architecture assignment on building custom data connectors (ETL pipelines) in Python. This assignment is part of the Kyureeus EdTech program for SSN CSE students.
-
----
-Guideline: Building and Managing Custom Data Connectors (ETL Pipeline) in Python
-
-1. Setting Up the Connector Environment
-a. Choose Your API Provider: Identify a data provider and understand its Base URL, Endpoints, and Authentication.
-b. Understand the API Documentation: Focus on headers, query params, pagination, rate limits, and response structure.
-
-
-2. Secure API Authentication Using Environment Variables
-a. Create a `.env` File Locally: Store API keys and secrets as KEY=VALUE pairs.
-b. Load Environment Variables in Code: Use libraries like `dotenv` to securely load environment variables.
-
-
-3. Design the ETL Pipeline
-Extract: Connect to the API, pass tokens/headers, and collect JSON data.
-Transform: Clean or reformat the data for MongoDB compatibility.
-Load: Store the transformed data into a MongoDB collection.
-
-
-4. MongoDB Collection Strategy
-Use one collection per connector, e.g., `connector_name_raw`.
-Store ingestion timestamps to support audits or updates.
-
-
-5. Iterative Testing & Validation
-Test for invalid responses, empty payloads, rate limits, and connectivity errors.
-Ensure consistent insertion into MongoDB.
-
-
-6. Git and Project Structure Guidelines
-a. Use a Central Git Repository: Clone the shared repo and create a new branch for your connector.
-b. Ignore Secrets: Add `.env` to `.gitignore` before the first commit.
-c. Push and Document: Write README.md with endpoint details, API usage, and example output.
-
-
-Final Checklist for Students
-Understand API documentation
-Secure credentials in `.env`
-Build complete ETL script
-Validate MongoDB inserts
-Push code to your branch
-Include descriptive README
-Submit Pull Request
-
-## 📋 Assignment Overview
-
-**Goal:**  
-Develop a Python script to connect with an API provider, extract data, transform it for compatibility, and load it into a MongoDB collection. Follow secure coding and project structure practices as outlined below.
+**Assignment 2:** Build custom Python ETL data connectors and submit to this repository.
 
 ---
 
-## ✅ Submission Checklist
-
-- [ ] Choose a data provider (API) and understand its documentation
-- [ ] Secure all API credentials using a `.env` file
-- [ ] Build a complete ETL pipeline: Extract → Transform → Load (into MongoDB)
-- [ ] Test and validate your pipeline (handle errors, invalid data, rate limits, etc.)
-- [ ] Follow the provided Git project structure
-- [ ] Write a clear and descriptive `README.md` in your folder with API details and usage instructions
-- [ ] **Include your name and roll number in your commit messages**
-- [ ] Push your code to your branch and submit a Pull Request
+## Author
+**Name:** S Neha Shanmitha  
+**Roll No:** 3122225001080 
+**Branch/Section:** CSE B
 
 ---
 
-## 📦 Project Structure
-
-/your-branch-name/
-├── etl_connector.py
-├── .env
-├── requirements.txt
-├── README.md
-└── (any additional scripts or configs)
-
-
-- **`.env`**: Store sensitive credentials; do **not** commit this file.
-- **`etl_connector.py`**: Your main ETL script.
-- **`requirements.txt`**: List all Python dependencies.
-- **`README.md`**: Instructions for your connector.
+## Overview
+This project implements a modular ETL connector that extracts data from the public **FilterLists API** (`https://api.filterlists.com`), transforms records for MongoDB compatibility, and loads them into separate MongoDB collections (one collection per endpoint). The connector is designed to be safe (retries, timeouts), auditable (ingestion timestamps and audit log), and extensible.
 
 ---
 
-## 🛡️ Secure Authentication
-
-- Store all API keys/secrets in a local `.env` file.
-- Load credentials using the `dotenv` Python library.
-- Add `.env` to `.gitignore` before committing.
-
----
-
-## 🗃️ MongoDB Guidelines
-
-- Use one MongoDB collection per connector (e.g., `connectorname_raw`).
-- Store ingestion timestamps for audit and update purposes.
+## Contents of this folder
+- `etl_connector.py` — main ETL script (Extract → Transform → Load)
+- `requirements.txt` — Python dependencies
+- `.gitignore` — ignore file (includes `.env`)
+- `ENV_TEMPLATE` — sample environment file 
+- `README.md` — this file
+- `outputs/` — add screenshots showing script output, MongoDB data, and commit/PR pages
 
 ---
 
-## 🧪 Testing & Validation
+## API Information
+**Base URL:** `https://api.filterlists.com`  
+**Endpoints used:**
+- `/languages`
+- `/licenses`
+- `/maintainers`
+- `/software`
+- `/syntaxes`
+- `/tags`
 
-- Check for invalid responses, empty payloads, rate limits, and connectivity issues.
-- Ensure data is correctly inserted into MongoDB.
-
----
-
-## 📝 Git & Submission Guidelines
-
-1. **Clone the repository** and create your own branch.
-2. **Add your code and documentation** in your folder/branch.
-3. **Do not commit** your `.env` or secrets.
-4. **Write clear commit messages** (include your name and roll number).
-5. **Submit a Pull Request** when done.
-
----
-
-## 💡 Additional Resources
-
-- [python-dotenv Documentation](https://saurabh-kumar.com/python-dotenv/)
-- [MongoDB Python Driver (PyMongo)](https://pymongo.readthedocs.io/en/stable/)
-- [API Documentation Example](https://restfulapi.net/)
+**Notes:**
+- The API is public and does not require authentication (no API key).
+- For `/lists`, the connector optionally fetches `/lists/{id}` to get full details; this endpoint can be slow or heavy due to dataset size — the script includes timeouts and retries.
 
 ---
 
-## 📢 Need Help?
-
-- Post your queries in the [KYUREEUS/SSN College - WhatsApp group](#) .
-- Discuss issues, share progress, and help each other.
+## Transformations applied
+- Cleans empty/null fields (removes None, empty strings, empty lists/dicts).
+- Adds ingestion metadata:
+  - ingestion_time (timezone-aware)
+  - fetched_at (ISO timestamp)
+  - schema_version (1.0)
+  - source object with api_base and endpoint
+- Adds _source_id (API id if present) and record_index (position in fetched list).
+- Endpoint-specific flattening:
+  - /languages: name, iso_code
+  - /licenses: license_name, license_url
+  - /maintainers: maintainer_name, maintainer_url
+  - /software: software_name, software_home
+  - /syntaxes: syntax_name
+  - /tags: tag_name
+- Keeps the original JSON under data for auditability.
 
 ---
 
-Happy coding! 🚀
+## MongoDB Collection Strategy
+- One collection per endpoint, named <endpoint_without_slash>_raw. Example: /languages → languages_raw.
+- Example of Document structure:
+```
+{
+  "_source_id": 1,
+  "record_index": 1,
+  "endpoint": "languages",
+  "ingestion_time": "2025-10-17T12:00:00+00:00",
+  "schema_version": 1.0,
+  "source": {
+    "api_base": "https://api.filterlists.com",
+    "endpoint": "/languages",
+    "retrieved_at": "2025-10-17T12:00:00+00:00"
+  },
+  "name": "English",
+  "iso_code": "en",
+  "data": { /* original API object */ }
+}
+```
+---
+## Input JSON (/software):
+```
+{
+    "id": 1,
+    "name": "uBlock Origin",
+    "description": null,
+    "homeUrl": "https://github.com/gorhill/uBlock",
+    "downloadUrl": "https://github.com/gorhill/uBlock#installation",
+    "supportsAbpUrlScheme": true,
+    "syntaxIds": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9,
+            13,
+            16,
+            17,
+            21,
+            28,
+            36,
+            39,
+            46,
+            47,
+            48,
+            53,
+            54
+    ]
+}
+```
+---
+## Output JSON in MONGO after ETL (/software):
+```
+{
+  "_id": {
+    "$oid": "68f2313b828d2f5db0b0be8a"
+  },
+  "endpoint": "/software",
+  "data": {
+    "id": 1,
+    "name": "uBlock Origin",
+    "description": null,
+    "homeUrl": "https://github.com/gorhill/uBlock",
+    "downloadUrl": "https://github.com/gorhill/uBlock#installation",
+    "supportsAbpUrlScheme": true,
+    "syntaxIds": [
+      1,
+      2,
+      3,
+      4,
+      6,
+      7,
+      8,
+      9,
+      13,
+      16,
+      17,
+      21,
+      28,
+      36,
+      39,
+      46,
+      47,
+      48,
+      53,
+      54
+    ]
+  },
+  "ingestion_time": {
+    "$date": "2025-10-17T12:06:19.151Z"
+  },
+  "fetched_at": "2025-10-17T12:06:19.151715Z"
+}
+```
+
+---
+## Error handling & testing
+The connector includes:
+- HTTP timeouts (default REQUEST_TIMEOUT from .env, e.g. 10 seconds).
+- Retries (3 attempts per request) with backoff.
+- Graceful skipping on persistent failures (logs an error and continues).
+- MongoDB connection check at startup.
+---
+## Example Output
+Terminal Output:
+![Example FilterLists ETL Output](Outputs/run_output.png)
+
+---
+Mongo update for all endpoints:
+![Example FIlterLists ETL Output](Outputs/mongo_storage_all_endpoints.png)
+
+---
+Mongo update for /languages:
+![Example FIlterLists ETL Output](Outputs/mongo_languages.png)
+---
+Mongo update for /licenses:
+![Example FIlterLists ETL Output](Outputs/mongo_licenses.png)
+---
+Mongo update for /maintainers:
+![Example FIlterLists ETL Output](Outputs/mongo_maintainers.png)
+---
+Mongo update for /software:
+![Example FIlterLists ETL Output](Outputs/mongo_software.png)
+---
+Mongo update for /syntaxes:
+![Example FIlterLists ETL Output](Outputs/mongo_syntaxes.png)
+---
+Mongo update for /tags:
+![Example FIlterLists ETL Output](Outputs/mongo_tags.png)
+---
