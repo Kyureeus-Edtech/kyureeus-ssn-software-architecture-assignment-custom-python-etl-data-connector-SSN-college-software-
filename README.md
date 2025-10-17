@@ -1,135 +1,194 @@
-# SSN-college-software-architecture-Assignments-
-Assignment repository for building custom Python ETL data connectors (Kyureeus EdTech, SSN CSE). Students: Submit your ETL scripts here. Make sure your commit message includes your name and roll number.
-# Software Architecture Assignment: Custom Python ETL Data Connector
 
-Welcome to the official repository for submitting your Software Architecture assignment on building custom data connectors (ETL pipelines) in Python. This assignment is part of the Kyureeus EdTech program for SSN CSE students.
+# RDAP ETL Connector
 
----
-Guideline: Building and Managing Custom Data Connectors (ETL Pipeline) in Python
+**Student:** Nisha Ganesh
+**Roll Number:** 3122225001084
 
-1. Setting Up the Connector Environment
-a. Choose Your API Provider: Identify a data provider and understand its Base URL, Endpoints, and Authentication.
-b. Understand the API Documentation: Focus on headers, query params, pagination, rate limits, and response structure.
+## Overview
 
+This Python ETL connector fetches data from **RDAP APIs** (Registration Data Access Protocol) and efficiently stores it in a MongoDB database. It is designed for robust extraction of key internet resource data, specifically covering  **domain** ,  **IP address** , and **Autonomous System Number (ASN)** information.
 
-2. Secure API Authentication Using Environment Variables
-a. Create a `.env` File Locally: Store API keys and secrets as KEY=VALUE pairs.
-b. Load Environment Variables in Code: Use libraries like `dotenv` to securely load environment variables.
+The pipeline includes crucial error handling and data integrity features.
 
+## API Endpoints Used
 
-3. Design the ETL Pipeline
-Extract: Connect to the API, pass tokens/headers, and collect JSON data.
-Transform: Clean or reformat the data for MongoDB compatibility.
-Load: Store the transformed data into a MongoDB collection.
+The connector utilizes the public RDAP bootstrap services via the base URL `https://rdap.org`. The following three key endpoints are targeted:
 
+| Resource Type                     | Endpoint Structure | Example Query                        |
+| --------------------------------- | ------------------ | ------------------------------------ |
+| **Domain**                  | `/domain/{name}` | `https://rdap.org/domain/iana.org` |
+| **IP Address**              | `/ip/{address}`  | `https://rdap.org/ip/8.8.8.8`      |
+| **Autonomous System (ASN)** | `/autnum/{asn}`  | `https://rdap.org/autnum/AS15169`  |
 
-4. MongoDB Collection Strategy
-Use one collection per connector, e.g., `connector_name_raw`.
-Store ingestion timestamps to support audits or updates.
+## Setup Instructions
 
+### 1. Create `.env` file
 
-5. Iterative Testing & Validation
-Test for invalid responses, empty payloads, rate limits, and connectivity errors.
-Ensure consistent insertion into MongoDB.
+A `.env` file is mandatory for securely configuring the connector's behavior and database connection. Create this file in the root directory of your project:
 
+```
+MONGO_URI=mongodb://localhost:27017
+MONGO_DB=rdap_data
+RDAP_BASE=[https://rdap.org](https://rdap.org)
+REQUEST_TIMEOUT_SECONDS=20
+MAX_RETRIES=5
+BACKOFF_FACTOR=1.0
+USER_AGENT=rdap-etl/1.0
+```
 
-6. Git and Project Structure Guidelines
-a. Use a Central Git Repository: Clone the shared repo and create a new branch for your connector.
-b. Ignore Secrets: Add `.env` to `.gitignore` before the first commit.
-c. Push and Document: Write README.md with endpoint details, API usage, and example output.
+### 2. Install dependencies
 
+Ensure you have all the required Python packages installed to run the script successfully.
 
-Final Checklist for Students
-Understand API documentation
-Secure credentials in `.env`
-Build complete ETL script
-Validate MongoDB inserts
-Push code to your branch
-Include descriptive README
-Submit Pull Request
+```
+# Install all required Python packages
+pip install requests pymongo python-dotenv
+# Alternatively, if a requirements.txt file exists:
+# pip install -r requirements.txt
+```
 
-## 📋 Assignment Overview
+## Target Configuration (`config.json`)
 
-**Goal:**  
-Develop a Python script to connect with an API provider, extract data, transform it for compatibility, and load it into a MongoDB collection. Follow secure coding and project structure practices as outlined below.
+The ETL connector uses a `config.json` file to define the list of resources (domains, IPs, and ASNs) to be queried in a single run. 
 
----
+```
+{
+  "domains": ["iana.org", "example.com", "github.com", "python.org", "openai.com"],
+  "ips": ["8.8.8.8", "1.1.1.1", "52.216.4.4", "34.216.5.6", "192.168.1.1"],
+  "autnums": ["AS15169", "AS13335", "AS16509", "AS32934", "AS8075"]
+}
+```
 
-## ✅ Submission Checklist
+## Running the ETL Connector
 
-- [ ] Choose a data provider (API) and understand its documentation
-- [ ] Secure all API credentials using a `.env` file
-- [ ] Build a complete ETL pipeline: Extract → Transform → Load (into MongoDB)
-- [ ] Test and validate your pipeline (handle errors, invalid data, rate limits, etc.)
-- [ ] Follow the provided Git project structure
-- [ ] Write a clear and descriptive `README.md` in your folder with API details and usage instructions
-- [ ] **Include your name and roll number in your commit messages**
-- [ ] Push your code to your branch and submit a Pull Request
+Execute the Python script, passing the configuration file path using the `--targets-file` argument:
 
----
+```
+# Run using the config.json targets file
+python etl_connector.py --targets-file config.json
+```
 
-## 📦 Project Structure
+## MongoDB Collection 
 
-/your-branch-name/
-├── etl_connector.py
-├── .env
-├── requirements.txt
-├── README.md
-└── (any additional scripts or configs)
+The ETL process uses the database specified by `MONGO_DB` (e.g., `rdap_data`) and stores data in three distinct collections, one for each resource type:
 
+1. `rdap_domain_raw` 
+2. `rdap_ip_raw`
+3. `rdap_autnum_raw`
 
-- **`.env`**: Store sensitive credentials; do **not** commit this file.
-- **`etl_connector.py`**: Your main ETL script.
-- **`requirements.txt`**: List all Python dependencies.
-- **`README.md`**: Instructions for your connector.
+Each document includes an `ingestion_metadata` field detailing the source endpoint, query value, and the time of ingestion to support auditing.
 
----
+Sample MongoDB Document:
 
-## 🛡️ Secure Authentication
+```json
+{
+  "_id": {
+    "$oid": "68f264fb2e3d1ac0f0af733c"
+  },
+  "source_url": "https://rdap.verisign.com/com/v1/domain/example.com",
+  "first_ingested_at": {
+    "$date": "2025-10-17T15:47:07.370Z"
+  },
+  "headers": Object,
+  "http_status": 200,
+  "ingested_at": {
+    "$date": "2025-10-17T15:47:07.370Z"
+  },
+  "normalized": Object,
+  "raw": Object
+}
+```
 
-- Store all API keys/secrets in a local `.env` file.
-- Load credentials using the `dotenv` Python library.
-- Add `.env` to `.gitignore` before committing.
+## Testing & Validation
 
----
+The connector implements robust error handling using the following logic:
 
-## 🗃️ MongoDB Guidelines
+### Invalid Responses (Non-JSON)
 
-- Use one MongoDB collection per connector (e.g., `connectorname_raw`).
-- Store ingestion timestamps for audit and update purposes.
+Logs a critical error and raises a `RuntimeError` if the API returns a non-JSON response body.
 
----
+```
+def safe_get(url: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    try:
+        resp = session.get(url, params=params, timeout=REQUEST_TIMEOUT)
+        payload = resp.json()  # Will raise ValueError if response is not JSON
+    except ValueError:
+        # Non-JSON body
+        logger.error("Non-JSON response from %s (status %d): %s", url, resp.status_code, resp.text[:500])
+        raise RuntimeError(f"Non-JSON response from {url} (status {resp.status_code})")
+    return {"status_code": resp.status_code, "payload": payload, "url": resp.url}
+```
 
-## 🧪 Testing & Validation
+### Empty Payloads
 
-- Check for invalid responses, empty payloads, rate limits, and connectivity issues.
-- Ensure data is correctly inserted into MongoDB.
+Skips the MongoDB insertion step and logs a warning if the API returns a 200 OK status but the response body contains no meaningful data.
 
----
+```
+resp = fetch_domain(domain_name)
+if not resp.get("payload"):
+    logger.warning("Empty payload for domain %s", domain_name)
+    return  # skip insertion into MongoDB
+doc = make_document(resp)
+connector.upsert_doc("rdap_domain_raw", doc)
+```
 
-## 📝 Git & Submission Guidelines
+### Rate Limits (HTTP 429)
 
-1. **Clone the repository** and create your own branch.
-2. **Add your code and documentation** in your folder/branch.
-3. **Do not commit** your `.env` or secrets.
-4. **Write clear commit messages** (include your name and roll number).
-5. **Submit a Pull Request** when done.
+Automatically retries the request up to `MAX_RETRIES`. It prioritizes the `Retry-After` header for wait time, falling back to exponential backoff (`BACKOFF_FACTOR * 2^TRIES`).
 
----
+```
+if status == 429:
+    # rate-limited: look for Retry-After header
+    ra = resp.headers.get("Retry-After")
+    wait = int(ra) if ra and ra.isdigit() else BACKOFF_FACTOR * (2 ** (tries - 1))
+    logger.warning("Rate limited (429). Retry after %s seconds", wait)
+    time.sleep(wait)
+    if tries >= MAX_RETRIES:
+        raise RuntimeError("Too many 429 responses")
+    continue
+```
 
-## 💡 Additional Resources
+### Connectivity/Network Errors
 
-- [python-dotenv Documentation](https://saurabh-kumar.com/python-dotenv/)
-- [MongoDB Python Driver (PyMongo)](https://pymongo.readthedocs.io/en/stable/)
-- [API Documentation Example](https://restfulapi.net/)
+Handles general `requests.RequestException` errors (like timeouts or DNS failures) by implementing retries with an exponential backoff strategy up to `MAX_RETRIES`.
 
----
+```
+except requests.RequestException as e:
+    logger.warning("Request error (try %d): %s", tries, e)
+    if tries >= MAX_RETRIES:
+        raise
+    sleep = BACKOFF_FACTOR * (2 ** (tries - 1))
+    logger.info("Sleeping %.1f seconds before retry", sleep)
+    time.sleep(sleep)
+    continue
+```
 
-## 📢 Need Help?
+### MongoDB Consistency (Upsert Logic)
 
-- Post your queries in the [KYUREEUS/SSN College - WhatsApp group](#) .
-- Discuss issues, share progress, and help each other.
+Uses `source_url` as a unique natural key for update operations, preventing duplicate document entries for the same RDAP query. It also records the `first_ingested_at` timestamp only on creation.
 
----
+```
+def upsert_doc(self, collection_name: str, doc: Dict[str, Any]):
+    coll = self.db[collection_name]
+    source = doc.get("source_url")
+    if source:
+        result = coll.update_one(
+            {"source_url": source},  # natural key
+            {"$set": doc, "$setOnInsert": {"first_ingested_at": doc["ingested_at"]}},
+            upsert=True,
+        )
+        logger.info("Upsert into %s matched=%s modified=%s upserted_id=%s", 
+                    collection_name, result.matched_count, result.modified_count, result.upserted_id)
+    else:
+        coll.insert_one(doc)
+```
 
-Happy coding! 🚀
+## RDAP API Reference
+
+The RDAP (Registration Data Access Protocol) API provides structured registration data for domains, IPs, and ASNs.
+
+* Official RDAP documentation and public resolver: [https://www.iana.org/rdap](https://www.iana.org/rdap "null")
+* RDAP endpoints used in this connector:
+  1. Domain: `/domain/{name}`
+  2. IP Address: `/ip/{address}`
+  3. Autonomous System Number (ASN): `/autnum/{asn}`
