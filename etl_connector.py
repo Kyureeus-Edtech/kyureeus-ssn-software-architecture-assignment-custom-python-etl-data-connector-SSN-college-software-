@@ -11,7 +11,6 @@ load_dotenv()
 
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 MONGO_DB = os.getenv("MONGO_DB", "rdap_etl_db")
-
 ENDPOINTS = {
     "arin": "https://rdap.arin.net/registry/ip/{ip}",
     "ripe": "https://rdap.db.ripe.net/ip/{ip}",

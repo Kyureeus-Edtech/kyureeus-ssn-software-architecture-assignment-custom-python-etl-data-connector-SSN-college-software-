@@ -9,7 +9,6 @@ and loads the results into MongoDB collections.
 - `requirements.txt` — Python dependencies
 - `.gitignore` — ignore `.env` and other artifacts
 - `.env.sample` — sample environment variables file
-
 ## Setup (local)
 1. Create and activate a Python venv (recommended):
    ```bash
