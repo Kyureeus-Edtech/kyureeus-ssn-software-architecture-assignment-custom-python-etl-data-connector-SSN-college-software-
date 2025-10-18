@@ -1,0 +1,4 @@
+BASE_URL=https://api.ssllabs.com/api/v4
+DEFAULT_DOMAIN=www.google.com
+EMAIL=rrohan2210375@ssn.edu.in
+MONGO_URI=mongodb://localhost:27017/
