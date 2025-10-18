@@ -4,65 +4,45 @@ import requests
 from pymongo import MongoClient
 import datetime
 
-# =======================================================
-# 1. Load Environment Variables
-# =======================================================
 load_dotenv()
 
 OTX_API_KEY = os.getenv("OTX_API_KEY", "").strip()
 MONGO_URI = os.getenv("MONGO_URI")
-DB_NAME = os.getenv("DB_NAME")
-COLLECTION_NAME = os.getenv("COLLECTION_NAME")
+DB_NAME = os.getenv("DB_NAME", "otx_database")
+LIMIT = int(os.getenv("LIMIT", 5))
+MODIFIED_SINCE = os.getenv("MODIFIED_SINCE")
+HEADERS = {"X-OTX-API-KEY": OTX_API_KEY}
 
-# New optional params from .env
-LIMIT = int(os.getenv("LIMIT"))  # default 10 results per page
-MODIFIED_SINCE = os.getenv("MODIFIED_SINCE")  # ISO 8601 datetime string or None
-
-BASE_URL = "https://otx.alienvault.com/api/v1/pulses/subscribed"
-
-# =======================================================
-# 2. Connect to MongoDB
-# =======================================================
 mongo_client = MongoClient(MONGO_URI)
 database = mongo_client[DB_NAME]
-collection = database[COLLECTION_NAME]
 
-# =======================================================
-# 3. Extract Function
-# =======================================================
-def fetch_pulses(page_number=1, limit=LIMIT, modified_since=MODIFIED_SINCE):
-    headers = {
-        "X-OTX-API-KEY": OTX_API_KEY
-    }
-    
-    params = {
-        "limit": limit,
-        "page": page_number
-    }
-    
-    if modified_since:
-        params["modified_since"] = modified_since
-    
+BASE = "https://otx.alienvault.com/api/v1"
+
+def make_request(url, params=None):
     try:
-        response = requests.get(BASE_URL, headers=headers, params=params)
+        response = requests.get(url, headers=HEADERS, params=params)
         response.raise_for_status()
         return response.json()
-    except requests.exceptions.HTTPError as http_err:
-        print(f"HTTP error occurred: {http_err}")
-        print(f"Response content: {response.text}")
-        return None
-    except requests.exceptions.RequestException as req_err:
-        print(f"Network or connection error: {req_err}")
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching {url}: {e}")
         return None
 
-# =======================================================
-# 4. Transform Function
-# =======================================================
+def fetch_subscribed_pulses(page=1, limit=LIMIT):
+    return make_request(f"{BASE}/pulses/subscribed", {"limit": limit, "page": page})
+
+def fetch_pulse_details(pulse_id):
+    return make_request(f"{BASE}/pulses/{pulse_id}")
+
+def fetch_indicators_by_pulse(pulse_id, page=1, limit=LIMIT):
+    return make_request(f"{BASE}/pulses/{pulse_id}/indicators", {"limit": limit, "page": page})
+
+def fetch_indicator_details(indicator_type, indicator_value):
+    return make_request(f"{BASE}/indicator/{indicator_type}/{indicator_value}")
+
 def transform_pulses(api_response):
-    transformed_pulses = []
-    
+    transformed = []
     for pulse in api_response.get("results", []):
-        pulse_record = {
+        record = {
             "id": pulse.get("id"),
             "name": pulse.get("name"),
             "author_name": pulse.get("author_name"),
@@ -78,68 +58,42 @@ def transform_pulses(api_response):
                     "type": i.get("type"),
                     "title": i.get("title"),
                     "description": i.get("description")
-                }
-                for i in pulse.get("indicators", [])
+                } for i in pulse.get("indicators", [])
             ],
-            "ingestion_timestamp": datetime.datetime.utcnow()
+            "ingestion_timestamp": datetime.datetime.now(datetime.timezone.utc)
         }
-        transformed_pulses.append(pulse_record)
-    
-    return transformed_pulses
+        transformed.append(record)
+    return transformed
 
-# =======================================================
-# 5. Load Function
-# =======================================================
-def load_to_mongodb(pulse_records):
-    for record in pulse_records:
+def load_to_mongodb(collection_name, records):
+    if not records:
+        return
+    collection = database[collection_name]
+    for record in records:
         try:
-            collection.update_one(
-                {"id": record["id"]},
-                {"$set": record},
-                upsert=True
-            )
+            collection.update_one({"id": record.get("id")}, {"$set": record}, upsert=True)
         except Exception as e:
-            print(f"Error inserting/updating pulse ID {record['id']}: {e}")
+            print(f"Error inserting/updating record {record.get('id')}: {e}")
 
-# =======================================================
-# 6. Main ETL Process
-# =======================================================
 def main():
-    page_number = 1
-    success = True
-    
-    while True:
-        print(f"Fetching page {page_number} from OTX Pulses API...")
-        
-        api_response = fetch_pulses(page_number=page_number)
-        if not api_response:
-            print("Stopping ETL due to error during extraction.")
-            success = False
-            break
-        
-        if not api_response.get("results"):
-            print("No more data found. Ending ETL process.")
-            break
-        
-        transformed_records = transform_pulses(api_response)
-        
-        if transformed_records:
-            load_to_mongodb(transformed_records)
-        else:
-            print("No valid records to insert for this page, skipping database operation.")
-        
-        if api_response.get("next"):
-            page_number += 1
-        else:
-            break
-    
-    if success:
-        print("ETL process completed successfully!")
-    else:
-        print("ETL process ended with errors.")
+    print(f"\nStarting Extended OTX ETL — {datetime.datetime.now(datetime.timezone.utc)}")
 
-# =======================================================
-# Script Entry Point
-# =======================================================
+    subs = fetch_subscribed_pulses()
+    load_to_mongodb("subscribed_pulses", transform_pulses(subs))
+
+    pulse_detail = fetch_pulse_details("6842f45696f96557e5f757b1")
+    if pulse_detail:
+        load_to_mongodb("subscribed_pulses", transform_pulses({"results": [pulse_detail]}))
+
+    indicators = fetch_indicators_by_pulse("6842f45696f96557e5f757b1")
+    if indicators and "results" in indicators:
+        load_to_mongodb("pulse_indicators", indicators["results"])
+
+    indicator_detail = fetch_indicator_details("IPv4", "62.234.24.38")
+    if indicator_detail:
+        load_to_mongodb("indicator_details", [indicator_detail])
+
+    print("\nETL Pipeline completed successfully!")
+
 if __name__ == "__main__":
     main()
