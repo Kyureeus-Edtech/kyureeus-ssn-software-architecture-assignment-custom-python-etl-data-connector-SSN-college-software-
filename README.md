@@ -1,135 +1,194 @@
-# SSN-college-software-architecture-Assignments-
-Assignment repository for building custom Python ETL data connectors (Kyureeus EdTech, SSN CSE). Students: Submit your ETL scripts here. Make sure your commit message includes your name and roll number.
-# Software Architecture Assignment: Custom Python ETL Data Connector
 
-Welcome to the official repository for submitting your Software Architecture assignment on building custom data connectors (ETL pipelines) in Python. This assignment is part of the Kyureeus EdTech program for SSN CSE students.
-
----
-Guideline: Building and Managing Custom Data Connectors (ETL Pipeline) in Python
-
-1. Setting Up the Connector Environment
-a. Choose Your API Provider: Identify a data provider and understand its Base URL, Endpoints, and Authentication.
-b. Understand the API Documentation: Focus on headers, query params, pagination, rate limits, and response structure.
-
-
-2. Secure API Authentication Using Environment Variables
-a. Create a `.env` File Locally: Store API keys and secrets as KEY=VALUE pairs.
-b. Load Environment Variables in Code: Use libraries like `dotenv` to securely load environment variables.
-
-
-3. Design the ETL Pipeline
-Extract: Connect to the API, pass tokens/headers, and collect JSON data.
-Transform: Clean or reformat the data for MongoDB compatibility.
-Load: Store the transformed data into a MongoDB collection.
-
-
-4. MongoDB Collection Strategy
-Use one collection per connector, e.g., `connector_name_raw`.
-Store ingestion timestamps to support audits or updates.
-
-
-5. Iterative Testing & Validation
-Test for invalid responses, empty payloads, rate limits, and connectivity errors.
-Ensure consistent insertion into MongoDB.
-
-
-6. Git and Project Structure Guidelines
-a. Use a Central Git Repository: Clone the shared repo and create a new branch for your connector.
-b. Ignore Secrets: Add `.env` to `.gitignore` before the first commit.
-c. Push and Document: Write README.md with endpoint details, API usage, and example output.
-
-
-Final Checklist for Students
-Understand API documentation
-Secure credentials in `.env`
-Build complete ETL script
-Validate MongoDB inserts
-Push code to your branch
-Include descriptive README
-Submit Pull Request
-
-## 📋 Assignment Overview
-
-**Goal:**  
-Develop a Python script to connect with an API provider, extract data, transform it for compatibility, and load it into a MongoDB collection. Follow secure coding and project structure practices as outlined below.
+# CIRCL Vulnerability ETL Pipeline (Python → MongoDB)
 
 ---
 
-## ✅ Submission Checklist
+## **Project Overview**
 
-- [ ] Choose a data provider (API) and understand its documentation
-- [ ] Secure all API credentials using a `.env` file
-- [ ] Build a complete ETL pipeline: Extract → Transform → Load (into MongoDB)
-- [ ] Test and validate your pipeline (handle errors, invalid data, rate limits, etc.)
-- [ ] Follow the provided Git project structure
-- [ ] Write a clear and descriptive `README.md` in your folder with API details and usage instructions
-- [ ] **Include your name and roll number in your commit messages**
-- [ ] Push your code to your branch and submit a Pull Request
+This project implements an ETL (Extract, Transform, Load) pipeline that integrates with the **CIRCL (Computer Incident Response Center Luxembourg) Vulnerability Lookup API**.(https://vulnerability.circl.lu/documentation/api-v1.html), structures the results into clean, standardized JSON documents, and stores them into **MongoDB** for downstream security analytics and visualization.
+
+
+It automates the collection, transformation, and storage of software vulnerability data (CVEs) into a MongoDB database for further analytics or dashboard integration.
+
+**The workflow:**
+
+1. Extracts vulnerability data such as recent vulnerabilities, trending vulnerabilities, most commented or sighted vulnerabilities, and vendor–product relationships from the CIRCL API.
+
+2. Transforms the extracted data into a structured format by standardizing fields (CVE ID, description, impact metrics, timestamps, vendor-product tags).
+
+3. Loads the structured data into MongoDB collections for querying, reporting, and integration with security monitoring tools.
+---
+
+## **API Endpoint Details**
+
+**Base URL:**
+
+```
+https://vulnerability.circl.lu/api/
+```
+
+**Authentication:**
+Some endpoints require authentication with an API key.
+Include your key in the request header:
+
+```
+Authorization: Bearer <YOUR_API_KEY>
+```
 
 ---
 
-## 📦 Project Structure
+### **Commonly Used Endpoints**
 
-/your-branch-name/
-├── etl_connector.py
-├── .env
-├── requirements.txt
-├── README.md
-└── (any additional scripts or configs)
-
-
-- **`.env`**: Store sensitive credentials; do **not** commit this file.
-- **`etl_connector.py`**: Your main ETL script.
-- **`requirements.txt`**: List all Python dependencies.
-- **`README.md`**: Instructions for your connector.
-
----
-
-## 🛡️ Secure Authentication
-
-- Store all API keys/secrets in a local `.env` file.
-- Load credentials using the `dotenv` Python library.
-- Add `.env` to `.gitignore` before committing.
+| Endpoint                     | Description                                           | Example                        |
+| ---------------------------- | ----------------------------------------------------- | ------------------------------ |
+| `/cve/<cve_id>`              | Retrieve full details for a specific CVE              | `/cve/CVE-2024-4567`           |
+| `/search/<vendor>/<product>` | Get vulnerabilities for a specific vendor/product     | `/search/microsoft/windows_10` |
+| `/last`                      | Fetch the latest CVEs published in NVD/CIRCL          | `/last`                        |
+| `/vendor`                    | List all vendors in the database                      | `/vendor`                      |
+| `/vendor/<vendor>`           | List all products for a vendor                        | `/vendor/microsoft`            |
+| `/cvss/<cve_id>`             | Retrieve the CVSS score for a CVE                     | `/cvss/CVE-2024-12345`         |
+| `/browse`                    | Get a hierarchical list of all vendors and products   | `/browse`                      |
+| `/recent`                    | Fetch recently updated vulnerabilities                | `/recent`                      |
+| `/trending`                  | Fetch top trending vulnerabilities in the last 7 days | `/trending`                    |
 
 ---
 
-## 🗃️ MongoDB Guidelines
+## **Transformation Fields**
 
-- Use one MongoDB collection per connector (e.g., `connectorname_raw`).
-- Store ingestion timestamps for audit and update purposes.
+Each vulnerability document is stored in MongoDB with structured attributes:
+
+| Field                 | Description                                               |
+| --------------------- | --------------------------------------------------------- |
+| `id`                  | The CVE identifier (e.g., CVE-2024-4567)                  |
+| `summary`             | A brief description of the vulnerability                  |
+| `published`           | Date the CVE was first published                          |
+| `last_modified`       | Most recent update time                                   |
+| `cvss`                | Numerical CVSS v3.1 base score                            |
+| `cvss_vector`         | Vector string (e.g., AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H) |
+| `cwe`                 | Common Weakness Enumeration ID                            |
+| `references`          | Array of URLs referencing the CVE                         |
+| `vendor`              | Vendor associated with the product                        |
+| `product`             | Affected product name(s)                                  |
+| `source`              | Origin of the data (e.g., NVD, CIRCL)                     |
+| `ingestion_timestamp` | UTC time when the record was fetched                      |
+
+---
+## **How the Interaction Happens**
+
+The components interact in a modular ETL flow:
+
+1. **extract.py** connects to the CIRCL API and retrieves JSON data for endpoints like /vulnerability/recent or /browse/vendor.
+
+2. **transform.py** processes this raw JSON data, extracting key fields (CVE ID, summary, CVSS score, vendor, references, published date) and ensuring consistent schema.
+
+3. **load.py** connects to MongoDB and inserts the processed data into specific collections such as vulnerabilities_recent_raw, vendors_raw, or vulnerabilities_most_commented.
+
+4. **main.py** orchestrates the pipeline — calling extract, transform, and load sequentially, while also printing progress logs and timestamps.
+---
+
+## **Key Steps in main.py**
+
+Each execution of main.py performs the following:
+| Step | Action                                                                       | Example Function                              |
+| ---- | ---------------------------------------------------------------------------- | --------------------------------------------- |
+| 1️⃣  | Extract all vendors                                                          | `get_vendors()`                               |
+| 2️⃣  | Extract recent vulnerabilities                                               | `get_recent_vulnerabilities()`                |
+| 3️⃣  | Extract last 20 vulnerabilities                                              | `get_last_vulnerabilities(20)`                |
+| 4️⃣  | Extract most-commented vulnerabilities                                       | `get_stats_most_commented()`                  |
+| 5️⃣  | Extract most-sighted vulnerabilities                                         | `get_stats_most_sighted()`                    |
+| 6️⃣  | Search vulnerabilities for a specific vendor-product pair                    | `search_vulnerabilities("microsoft", "edge")` |
+| 7️⃣  | If results are found, fetch associated comments and insert them into MongoDB | `get_comments()`                              |
+| ✅    | Insert all processed data into MongoDB collections                           | `insert_to_mongo(collection_name, data)`      |
+---
+## **Setup Instructions**
+
+### 1. **Clone the Repository**
+
+### 2. **Create a `.env` File**
+
+```
+MONGO_URI=your_mongo_connection_uri_here
+DB_NAME=your_database_name_here
+CIRCL_USERNAME=your_circl_username_here
+CIRCL_PASSWORD=your_circl_password_here
+```
+
+### 3. **Install Dependencies**
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. **Run MongoDB**
+
+Ensure MongoDB is running locally or connected remotely.
+
+### 5. **Execute the ETL Script**
+
+```bash
+python main.py
+```
 
 ---
 
-## 🧪 Testing & Validation
+## **Testing and Validation**
 
-- Check for invalid responses, empty payloads, rate limits, and connectivity issues.
-- Ensure data is correctly inserted into MongoDB.
-
----
-
-## 📝 Git & Submission Guidelines
-
-1. **Clone the repository** and create your own branch.
-2. **Add your code and documentation** in your folder/branch.
-3. **Do not commit** your `.env` or secrets.
-4. **Write clear commit messages** (include your name and roll number).
-5. **Submit a Pull Request** when done.
+✅ Uses `raise_for_status()` for API error handling (e.g., 404, 403, 429)
+✅ Skips insertion if the API returns an empty dataset
+✅ Uses `upsert=True` to avoid duplicate CVE records
+✅ Adds timestamped logs for each extraction batch
+✅ Supports multi-endpoint collection in one run (trending, recent, specific vendor/product)
 
 ---
 
-## 💡 Additional Resources
+## **Example MongoDB Document**
 
-- [python-dotenv Documentation](https://saurabh-kumar.com/python-dotenv/)
-- [MongoDB Python Driver (PyMongo)](https://pymongo.readthedocs.io/en/stable/)
-- [API Documentation Example](https://restfulapi.net/)
+```json
+{
+  "_id": "CVE-2024-4567",
+  "summary": "Buffer overflow in Windows 10 kernel allows remote code execution.",
+  "published": "2024-07-12T10:32:00Z",
+  "last_modified": "2025-01-10T14:15:20Z",
+  "cvss": 9.8,
+  "cvss_vector": "AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+  "cwe": "CWE-120",
+  "vendor": "microsoft",
+  "product": "windows_10",
+  "references": [
+    "https://nvd.nist.gov/vuln/detail/CVE-2024-4567",
+    "https://msrc.microsoft.com/update-guide/en-US/vulnerability/CVE-2024-4567"
+  ],
+  "source": "CIRCL Vulnerability DB",
+  "ingestion_timestamp": "2025-10-18T09:35:21Z"
+}
+```
 
 ---
 
-## 📢 Need Help?
+## **Project Structure**
 
-- Post your queries in the [KYUREEUS/SSN College - WhatsApp group](#) .
-- Discuss issues, share progress, and help each other.
+```
+project-folder/
+├── main.py                  # Entry point that calls extract, transform, and load functions
+├── extract.py               # Handles API calls (fetches CVE, trending, vendor data)
+├── transform.py             # Cleans and normalizes vulnerability records
+├── load.py                  # Inserts/updates documents in MongoDB
+├── utils.py                 # Helper functions (auth, logging, timestamp)
+├── .env                     # Stores API key and DB config (not in git)
+├── requirements.txt         # Dependency list
+├── README.md                # This documentation
+└── .gitignore               # Ensures .env and cache files are excluded
+```
 
 ---
 
-Happy coding! 🚀
+## **Summary**
+
+This ETL pipeline connects securely to the **CIRCL Vulnerability Intelligence API**, retrieves multi-endpoint vulnerability data, and stores it in **MongoDB** after structuring and deduplication.
+
+It is designed for **academic clarity and professional scalability**, supporting multiple use cases such as:
+
+* Threat intelligence dashboards
+* CVE analytics
+* Correlation with local asset data
+* Security research and reporting
