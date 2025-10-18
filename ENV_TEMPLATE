@@ -1,0 +1,5 @@
+# ===== MongoDB Configuration =====
+MONGO_URI=<your-mongo-uri>
+
+# ===== Blacklist.de API Configuration =====
+BLACKLIST_BASE_URL=https://api.blacklist.de
