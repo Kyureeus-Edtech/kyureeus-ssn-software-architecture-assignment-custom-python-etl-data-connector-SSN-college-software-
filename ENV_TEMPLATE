@@ -1,4 +1,6 @@
-MALSHARE_API_KEY=<your-malshare-api-key>
-MALSHARE_BASE_URL=https://malshare.com/api.php
+# --- MongoDB Configuration ---
+MONGO_URI=mongodb://localhost:27017/
+DB_NAME=cybersecurity_data
 
-MONGO_URI=mongodb://<mongodb-username>:<mongodb-password>@<hostname>:<port> <!-- Or whatever mongodb uri you are using -->
+# --- SSL Labs API Configuration ---
+SSLLABS_EMAIL=your_registered_email@example.com
