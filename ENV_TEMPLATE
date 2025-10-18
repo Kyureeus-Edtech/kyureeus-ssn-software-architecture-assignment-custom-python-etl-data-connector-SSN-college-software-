@@ -1,0 +1,5 @@
+WAYBACK_BASE_URL=https://api.archive.org
+WAYBACK_CDX_BASE_URL=https://web.archive.org/cdx/search/cdx
+WAYBACK_SAVE_BASE_URL=https://web.archive.org
+
+MONGO_URI=<your-mongo-db-uri>
