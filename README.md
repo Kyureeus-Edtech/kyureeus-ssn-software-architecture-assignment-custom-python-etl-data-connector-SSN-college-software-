@@ -1,269 +1,194 @@
 
-## OTX Pulses ETL Pipeline (Python to MongoDB)
+# CIRCL Vulnerability ETL Pipeline (Python → MongoDB)
+
 ---
-**Project Overview**  
-This project implements an ETL (Extract – Transform – Load) process that retrieves cyber threat intelligence data from the AlienVault OTX (Open Threat Exchange) API, processes it to retain structured and relevant fields, and stores it in a MongoDB collection for further analysis or integration with security tools.
 
-The script does the following:
+## **Project Overview**
 
-- Extracts subscribed pulses from the OTX API using API key authentication, pagination, and optional filters (limit, modified_since)
+This project implements an ETL (Extract, Transform, Load) pipeline that integrates with the **CIRCL (Computer Incident Response Center Luxembourg) Vulnerability Lookup API**.(https://vulnerability.circl.lu/documentation/api-v1.html), structures the results into clean, standardized JSON documents, and stores them into **MongoDB** for downstream security analytics and visualization.
 
-- Transforms each pulse to include only useful threat intel metadata and indicators
 
-- Loads the cleaned, structured pulses into MongoDB using upsert to avoid duplicates while updating existing entries
+It automates the collection, transformation, and storage of software vulnerability data (CVEs) into a MongoDB database for further analytics or dashboard integration.
 
-- Adds an ingestion timestamp for audit and data freshness tracking
+**The workflow:**
+
+1. Extracts vulnerability data such as recent vulnerabilities, trending vulnerabilities, most commented or sighted vulnerabilities, and vendor–product relationships from the CIRCL API.
+
+2. Transforms the extracted data into a structured format by standardizing fields (CVE ID, description, impact metrics, timestamps, vendor-product tags).
+
+3. Loads the structured data into MongoDB collections for querying, reporting, and integration with security monitoring tools.
 ---
-**API Endpoint Details**  
-Base URL: https://otx.alienvault.com/api/v1/pulses/subscribed
-You must supply your API key in the HTTP request header: `X-OTX-API-KEY=YOUR_API_KEY`.  
 
-Example endpoint:  
+## **API Endpoint Details**
+
+**Base URL:**
+
 ```
-https://otx.alienvault.com/api/v1/pulses/subscribed?limit=10&page=1
+https://vulnerability.circl.lu/api/
 ```
----
-**Common parameters**:  
-- limit → Number of records per page (default: 10)
 
-- page → Page number for pagination
+**Authentication:**
+Some endpoints require authentication with an API key.
+Include your key in the request header:
 
-- modified_since → (Optional) Only return pulses modified after a specific date (ISO 8601 format, e.g., 2025-01-01T00:00:00+00:00)
-
-In this ETL we keep:  
-- **id, name, author_name** – Unique ID of the pulse, human-readable title, and the pulse’s author.  
-- **description** – Full pulse description, preserved exactly as provided by the OTX API.
-- **created, modified** – ISO 8601 timestamps for when the pulse was first created and last updated.  
-- **tags** – List of associated keywords for categorization.  
-- **references** –  List of external URLs with further analysis or context.
-- **targeted_countries** – Countries targeted by this threat campaign. 
-- **indicators** –  A list of structured threat indicators (IOCs), each containing:
-
-  - **indicator** – The actual value of the IoC (e.g., IP address, domain, URL, file hash).
-
-  - **type** – Type of the IoC (e.g., IPv4, domain, URL, SHA256).
-
-  - **title** – Short descriptive title or label for the indicator.
-
-  - **description** – Additional descriptive context about the indicator.
-- **ingestion_timestamp** – UTC timestamp of when the record was fetched and stored, used for auditing and data freshness tracking.
----
-**Setup Instructions** 
-1. Clone the repository and open the project folder.  
-
-2. Create a `.env` file with the following content:  
 ```
-OTX_API_KEY=your_otx_api_key_here
+Authorization: Bearer <YOUR_API_KEY>
+```
+
+---
+
+### **Commonly Used Endpoints**
+
+| Endpoint                     | Description                                           | Example                        |
+| ---------------------------- | ----------------------------------------------------- | ------------------------------ |
+| `/cve/<cve_id>`              | Retrieve full details for a specific CVE              | `/cve/CVE-2024-4567`           |
+| `/search/<vendor>/<product>` | Get vulnerabilities for a specific vendor/product     | `/search/microsoft/windows_10` |
+| `/last`                      | Fetch the latest CVEs published in NVD/CIRCL          | `/last`                        |
+| `/vendor`                    | List all vendors in the database                      | `/vendor`                      |
+| `/vendor/<vendor>`           | List all products for a vendor                        | `/vendor/microsoft`            |
+| `/cvss/<cve_id>`             | Retrieve the CVSS score for a CVE                     | `/cvss/CVE-2024-12345`         |
+| `/browse`                    | Get a hierarchical list of all vendors and products   | `/browse`                      |
+| `/recent`                    | Fetch recently updated vulnerabilities                | `/recent`                      |
+| `/trending`                  | Fetch top trending vulnerabilities in the last 7 days | `/trending`                    |
+
+---
+
+## **Transformation Fields**
+
+Each vulnerability document is stored in MongoDB with structured attributes:
+
+| Field                 | Description                                               |
+| --------------------- | --------------------------------------------------------- |
+| `id`                  | The CVE identifier (e.g., CVE-2024-4567)                  |
+| `summary`             | A brief description of the vulnerability                  |
+| `published`           | Date the CVE was first published                          |
+| `last_modified`       | Most recent update time                                   |
+| `cvss`                | Numerical CVSS v3.1 base score                            |
+| `cvss_vector`         | Vector string (e.g., AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H) |
+| `cwe`                 | Common Weakness Enumeration ID                            |
+| `references`          | Array of URLs referencing the CVE                         |
+| `vendor`              | Vendor associated with the product                        |
+| `product`             | Affected product name(s)                                  |
+| `source`              | Origin of the data (e.g., NVD, CIRCL)                     |
+| `ingestion_timestamp` | UTC time when the record was fetched                      |
+
+---
+## **How the Interaction Happens**
+
+The components interact in a modular ETL flow:
+
+1. **extract.py** connects to the CIRCL API and retrieves JSON data for endpoints like /vulnerability/recent or /browse/vendor.
+
+2. **transform.py** processes this raw JSON data, extracting key fields (CVE ID, summary, CVSS score, vendor, references, published date) and ensuring consistent schema.
+
+3. **load.py** connects to MongoDB and inserts the processed data into specific collections such as vulnerabilities_recent_raw, vendors_raw, or vulnerabilities_most_commented.
+
+4. **main.py** orchestrates the pipeline — calling extract, transform, and load sequentially, while also printing progress logs and timestamps.
+---
+
+## **Key Steps in main.py**
+
+Each execution of main.py performs the following:
+| Step | Action                                                                       | Example Function                              |
+| ---- | ---------------------------------------------------------------------------- | --------------------------------------------- |
+| 1️⃣  | Extract all vendors                                                          | `get_vendors()`                               |
+| 2️⃣  | Extract recent vulnerabilities                                               | `get_recent_vulnerabilities()`                |
+| 3️⃣  | Extract last 20 vulnerabilities                                              | `get_last_vulnerabilities(20)`                |
+| 4️⃣  | Extract most-commented vulnerabilities                                       | `get_stats_most_commented()`                  |
+| 5️⃣  | Extract most-sighted vulnerabilities                                         | `get_stats_most_sighted()`                    |
+| 6️⃣  | Search vulnerabilities for a specific vendor-product pair                    | `search_vulnerabilities("microsoft", "edge")` |
+| 7️⃣  | If results are found, fetch associated comments and insert them into MongoDB | `get_comments()`                              |
+| ✅    | Insert all processed data into MongoDB collections                           | `insert_to_mongo(collection_name, data)`      |
+---
+## **Setup Instructions**
+
+### 1. **Clone the Repository**
+
+### 2. **Create a `.env` File**
+
+```
 MONGO_URI=your_mongo_connection_uri_here
 DB_NAME=your_database_name_here
-COLLECTION_NAME=your_collection_name_here
-LIMIT=100
-MODIFIED_SINCE=
+CIRCL_USERNAME=your_circl_username_here
+CIRCL_PASSWORD=your_circl_password_here
 ```
 
-3. Install dependencies:  
-```
+### 3. **Install Dependencies**
+
+```bash
 pip install -r requirements.txt
 ```
 
-4. Make sure MongoDB is running locally or connect to a remote instance.  
+### 4. **Run MongoDB**
 
-5. Run the ETL script:  
+Ensure MongoDB is running locally or connected remotely.
+
+### 5. **Execute the ETL Script**
+
+```bash
+python main.py
 ```
-python etl_connector.py
-```
----
-**Testing and Validation**  
-The script includes several checks to ensure quality:  
-- raise_for_status() to detect and stop on HTTP errors (403, 429, etc.)
-
-- Prints API error responses for debugging
-
-- Skips database insertion if the API returns no results
-
-- Uses upsert in MongoDB to update existing pulses without duplication
-
-- Preserves full descriptions and indicator details for complete analysis
-
-- Adds ingestion timestamps for tracking
----
-**Why the Code is Self‑Documenting**  
-- Function names clearly describe their purpose: fetch_pulses, transform_pulses, load_to_mongodb
-
-- Extract / Transform / Load steps are separated into well-marked code blocks
-
-- Explicit variable names (e.g., modified_since, transformed_pulses)
-
-- Prints progress messages for every page and load operation
-
 
 ---
-**Example Output Document (from MongoDB)**  
-```
+
+## **Testing and Validation**
+
+✅ Uses `raise_for_status()` for API error handling (e.g., 404, 403, 429)
+✅ Skips insertion if the API returns an empty dataset
+✅ Uses `upsert=True` to avoid duplicate CVE records
+✅ Adds timestamped logs for each extraction batch
+✅ Supports multi-endpoint collection in one run (trending, recent, specific vendor/product)
+
+---
+
+## **Example MongoDB Document**
+
+```json
 {
-  "_id": {
-    "$oid": "689a27c1ae36b3d182f47002"
-  },
-  "id": "6842f45696f96557e5f757b1",
-  "author_name": "AlienVault",
-  "created": "2025-06-06T13:59:50.252000",
-  "description": "A sophisticated cyber campaign targeting China Mobile Tietong Co., Ltd., a subsidiary of China Mobile, has been uncovered. The operation, dubbed DRAGONCLONE, utilizes VELETRIX and VShell malware to infiltrate systems. The attack chain begins with a malicious ZIP file containing executable files and DLLs, exploiting DLL sideloading against Wondershare Repairit software. VELETRIX, a loader, employs anti-analysis techniques and IPFuscation to decode and execute VShell, a cross-platform OST framework. The campaign shows infrastructure overlaps with known China-nexus threat actors like UNC5174 and Earth Lamia. The attackers utilize various tools including Cobalt Strike, SuperShell, and Asset Lighthouse System for reconnaissance and post-exploitation activities.",
-  "indicators": [
-    {
-      "indicator": "0668293c9f523f26babc09617063493b",
-      "type": "FileHash-MD5",
-      "title": "",
-      "description": ""
-    },
-    {
-      "indicator": "241f0748c8eec5bd7c6bf52a9a6ac1dd",
-      "type": "FileHash-MD5",
-      "title": "",
-      "description": ""
-    },
-    {
-      "indicator": "3199796dc2ad51da41da51de58d31012",
-      "type": "FileHash-MD5",
-      "title": "",
-      "description": ""
-    },
-    {
-      "indicator": "81f76f83d4c571fe95772f21aff4d0b9",
-      "type": "FileHash-MD5",
-      "title": "",
-      "description": ""
-    },
-    {
-      "indicator": "37a37bc7255089fdd000feb10780c2513c4416c8",
-      "type": "FileHash-SHA1",
-      "title": "",
-      "description": ""
-    },
-    {
-      "indicator": "ba8e2015fd0abe944d6b546088451ff05dd24849",
-      "type": "FileHash-SHA1",
-      "title": "",
-      "description": ""
-    },
-    {
-      "indicator": "ea97ee5f81f157e2ecf729b6c43f0997c3af20d3",
-      "type": "FileHash-SHA1",
-      "title": "",
-      "description": ""
-    },
-    {
-      "indicator": "f8cf927cb2baf893b136bc5d90535d193fc73b75",
-      "type": "FileHash-SHA1",
-      "title": "",
-      "description": ""
-    },
-    {
-      "indicator": "2206cc6bd9d15cf898f175ab845b3deb4b8627102b74e1accefe7a3ff0017112",
-      "type": "FileHash-SHA256",
-      "title": "",
-      "description": ""
-    },
-    {
-      "indicator": "40450b4212481492d2213d109a0cd0f42de8e813de42d53360da7efac7249df4",
-      "type": "FileHash-SHA256",
-      "title": "",
-      "description": ""
-    },
-    {
-      "indicator": "645f9f81eb83e52bbbd0726e5bf418f8235dd81ba01b6a945f8d6a31bf406992",
-      "type": "FileHash-SHA256",
-      "title": "",
-      "description": ""
-    },
-    {
-      "indicator": "a0f4ee6ea58a8896d2914176d2bfbdb9e16b700f52d2df1f77fe6ce663c1426a",
-      "type": "FileHash-SHA256",
-      "title": "",
-      "description": ""
-    },
-    {
-      "indicator": "ac6e0ee1328cfb1b6ca0541e4dfe7ba6398ea79a300c4019253bd908ab6a3dc0",
-      "type": "FileHash-SHA256",
-      "title": "",
-      "description": ""
-    },
-    {
-      "indicator": "ba4f9b324809876f906f3cb9b90f8af2f97487167beead549a8cddfd9a7c2fdc",
-      "type": "FileHash-SHA256",
-      "title": "",
-      "description": ""
-    },
-    {
-      "indicator": "bb6ab67ddbb74e7afb82bb063744a91f3fecf5fd0f453a179c0776727f6870c7",
-      "type": "FileHash-SHA256",
-      "title": "",
-      "description": ""
-    },
-    {
-      "indicator": "62.234.24.38",
-      "type": "IPv4",
-      "title": "",
-      "description": ""
-    },
-    {
-      "indicator": "156.238.236.130",
-      "type": "IPv4",
-      "title": "",
-      "description": ""
-    },
-    {
-      "indicator": "121.37.80.227",
-      "type": "IPv4",
-      "title": "",
-      "description": ""
-    },
-    {
-      "indicator": "fef69f8747c368979a9e4c62f4648ea233314b5f41981d9c01c1cdd96fb07365",
-      "type": "FileHash-SHA256",
-      "title": "",
-      "description": ""
-    }
-  ],
-  "ingestion_timestamp": {
-    "$date": "2025-08-11T17:26:25.333Z"
-  },
-  "modified": "2025-08-11T17:15:56.021000",
-  "name": "Operation DRAGONCLONE: Chinese Telecom Targeted by Malware",
+  "_id": "CVE-2024-4567",
+  "summary": "Buffer overflow in Windows 10 kernel allows remote code execution.",
+  "published": "2024-07-12T10:32:00Z",
+  "last_modified": "2025-01-10T14:15:20Z",
+  "cvss": 9.8,
+  "cvss_vector": "AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+  "cwe": "CWE-120",
+  "vendor": "microsoft",
+  "product": "windows_10",
   "references": [
-    "https://www.seqrite.com/blog/operation-dragonclone-chinese-telecom-veletrix-vshell-malware/",
-    "https://0x0d4y.blog/telecommunications-supply-chain-china-nexus-threat-technical-analysis-of-veletrix-loaders-strategic-infrastructure-positioning/"
+    "https://nvd.nist.gov/vuln/detail/CVE-2024-4567",
+    "https://msrc.microsoft.com/update-guide/en-US/vulnerability/CVE-2024-4567"
   ],
-  "tags": [
-    "china-nexus",
-    "veletrix",
-    "dll sideloading",
-    "earth lamia",
-    "asset lighthouse system",
-    "unc5174",
-    "cve-2024-1709",
-    "supershell",
-    "cve-2025-31324",
-    "cobalt strike"
-  ],
-  "targeted_countries": [
-    "China"
-  ]
+  "source": "CIRCL Vulnerability DB",
+  "ingestion_timestamp": "2025-10-18T09:35:21Z"
 }
-
 ```
+
 ---
-**Project Structure**  
+
+## **Project Structure**
+
 ```
 project-folder/
-├── etl_connector.py        # The ETL Python script
-├── .env                   # Secrets: API key, Mongo URI (not committed to git)
-├── requirements.txt       # Python dependency list
-├── README.md              # Project documentation including APIs
-├── .gitignore             # Ensures .env and other sensitive files are not committed
+├── main.py                  # Entry point that calls extract, transform, and load functions
+├── extract.py               # Handles API calls (fetches CVE, trending, vendor data)
+├── transform.py             # Cleans and normalizes vulnerability records
+├── load.py                  # Inserts/updates documents in MongoDB
+├── utils.py                 # Helper functions (auth, logging, timestamp)
+├── .env                     # Stores API key and DB config (not in git)
+├── requirements.txt         # Dependency list
+├── README.md                # This documentation
+└── .gitignore               # Ensures .env and cache files are excluded
 ```
+
 ---
-**Summary**  
-This pipeline connects securely to the AlienVault OTX API, extracts subscribed pulses, transforms them into structured JSON documents, and loads them into MongoDB. It includes pagination, optional date filtering, and complete indicator details for security analysis. The process is designed for clarity, maintainability, and scalability — making it easy to integrate into broader threat intelligence workflows.
 
+## **Summary**
 
+This ETL pipeline connects securely to the **CIRCL Vulnerability Intelligence API**, retrieves multi-endpoint vulnerability data, and stores it in **MongoDB** after structuring and deduplication.
 
+It is designed for **academic clarity and professional scalability**, supporting multiple use cases such as:
+
+* Threat intelligence dashboards
+* CVE analytics
+* Correlation with local asset data
+* Security research and reporting
