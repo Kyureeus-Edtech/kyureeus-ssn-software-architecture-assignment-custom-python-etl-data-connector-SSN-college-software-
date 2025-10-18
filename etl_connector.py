@@ -1,264 +1,299 @@
+"""
+Multi-Source Threat Intelligence ETL Pipeline
+
+This script extracts data from multiple cybersecurity APIs (CISA and Blocklist.de),
+handles different data formats (JSON, XML, and Text), transforms the data into a
+standardized format, and loads it into a MongoDB database using an upsert strategy.
+"""
+
 import os
-import requests
-from pymongo import MongoClient
-from dotenv import load_dotenv
-from datetime import datetime
 import logging
 import json
+import xmltodict
+from datetime import datetime
+from typing import List, Dict, Any, Optional, Union
 
+import requests
+from dotenv import load_dotenv
+from pymongo import MongoClient, ReplaceOne
+from pymongo.errors import PyMongoError, ConnectionFailure
+
+# --- 1. Setup and Global Configuration ---
+
+# Configure logging to show timestamp, level, and message
 logging.basicConfig(
-    level=logging.INFO,
-    format='[%(levelname)s] %(asctime)s - %(funcName)s: %(message)s',
-    datefmt='%H:%M:%S'
+    level=logging.INFO, 
+    format='%(asctime)s - %(levelname)s - %(message)s'
 )
-logger = logging.getLogger(__name__)
 
+# Load environment variables from a .env file
 load_dotenv()
+MONGO_URI = os.getenv("MONGO_URI")
+DB_NAME = os.getenv("DB_NAME", "cybersecurity_data") # Default DB name if not set
 
-class CISAVulnerabilityETL:
-   
-    CISA_API_ENDPOINT = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
-    TARGET_COLLECTION = "cisa_vulnerabilities_raw"
-    REQUEST_TIMEOUT = 20
-    
-    def __init__(self):
-        self.mongo_uri = os.getenv("MONGO_URI")
-        self.database_name = os.getenv("DB_NAME", "security_intelligence")
-        
-        if not self.mongo_uri:
-            raise EnvironmentError("MONGO_URI environment variable must be set")
-        
-        logger.info("CISA Vulnerability ETL Pipeline initialized")
-        logger.info(f"MongoDB URI configured: {self.mongo_uri[:20]}...")
-    
-    def fetch_vulnerability_data(self):
+# --- 2. Endpoint Configuration ---
+ENDPOINTS_TO_PROCESS = [
+    # --- CISA Endpoints ---
+    {
+        "name": "CISA KEV Catalog",
+        "url": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
+        "format": "json",
+        "collection": "cisa_kev_catalog_raw",
+        "data_key_path": ["vulnerabilities"], # Path to the list of records in the JSON
+        "id_key": "cveID"                     # Unique key for upserting
+    },
+    {
+        "name": "CISA Alerts",
+        "url": "https://www.cisa.gov/cybersecurity-advisories/all.xml",
+        "format": "xml",
+        "collection": "cisa_alerts_raw",
+        "data_key_path": ["rss", "channel", "item"], # Path to the list of records in the XML
+        "id_key": "guid"
+    },
+    {
+        "name": "CISA ICS Advisories",
+        "url": "https://www.cisa.gov/cybersecurity-advisories/ics-advisories.xml",
+        "format": "xml",
+        "collection": "cisa_ics_advisories_raw",
+        "data_key_path": ["rss", "channel", "item"],
+        "id_key": "guid"
+    },
+    {
+        "name": "CISA News & Events",
+        "url": "https://www.cisa.gov/news.xml",
+        "format": "xml",
+        "collection": "cisa_news_raw",
+        "data_key_path": ["rss", "channel", "item"],
+        "id_key": "guid"
+    },
 
-        logger.info("Initiating data fetch from CISA KEV API...")
+    # --- Blocklist.de Endpoints ---
+    {
+        "name": "Blocklist.de All IPs",
+        "url": "https://api.blocklist.de/lists/all.txt",
+        "format": "text",
+        "collection": "blocklist_de_all_raw",
+        "data_key_path": [],  # Not applicable, text format is a flat list
+        "id_key": "ip_address" # We will create this key during transformation
+    },
+    {
+        "name": "Blocklist.de SSH Attacks",
+        "url": "https://api.blocklist.de/lists/ssh.txt",
+        "format": "text",
+        "collection": "blocklist_de_ssh_raw",
+        "data_key_path": [],
+        "id_key": "ip_address"
+    },
+    {
+        "name": "Blocklist.de Bot IPs",
+        "url": "https://api.blocklist.de/lists/bots.txt",
+        "format": "text",
+        "collection": "blocklist_de_bots_raw",
+        "data_key_path": [],
+        "id_key": "ip_address"
+    }
+]
+
+
+# --- 3. ETL Core Functions ---
+
+def extract_data(api_url: str) -> Optional[str]:
+    """
+    (E)xtracts raw data text from a specified API endpoint.
+    Returns: The full text content from the API, or None if an error occurs.
+    """
+    logging.info(f"Extracting data from: {api_url}")
+    try:
+        response = requests.get(api_url, timeout=20)
+        response.raise_for_status()  # Raises an HTTPError for bad responses (4xx or 5xx)
+        logging.info(f"Successfully extracted raw data from {api_url}")
+        return response.text
+    except requests.exceptions.HTTPError as e:
+        logging.error(f"[HTTP Error] Failed to extract data from {api_url}: {e}")
+    except requests.exceptions.ConnectionError as e:
+        logging.error(f"[Connection Error] Failed to extract data from {api_url}: {e}")
+    except requests.exceptions.Timeout as e:
+        logging.error(f"[Timeout Error] Failed to extract data from {api_url}: {e}")
+    except requests.exceptions.RequestException as e:
+        logging.error(f"[Request Error] Failed to extract data from {api_url}: {e}")
+    return None
+
+def get_nested_data(data: Dict, path: List[str]) -> List[Dict]:
+    """
+    A helper function to safely navigate a nested dictionary using a list of keys
+    (e.g., ['rss', 'channel', 'item']).
+    """
+    if not path: # Handles cases like FreeGeoIP where the whole object is the record
+        if isinstance(data, dict):
+            return [data] # Wrap the single object in a list
+        logging.warning("Empty data path, but root data is not a dictionary.")
+        return []
+
+    try:
+        temp_data = data
+        for key in path:
+            temp_data = temp_data[key]
         
-        request_headers = {
-            'User-Agent': 'Educational-ETL-Pipeline/1.0',
-            'Accept': 'application/json, text/plain, /',
-            'Accept-Encoding': 'gzip, deflate, br'
-        }
+        # Handle cases where an XML feed has only one item (it's a dict, not a list)
+        if isinstance(temp_data, list):
+            return temp_data
+        elif isinstance(temp_data, dict):
+            return [temp_data] # Wrap the single item in a list
+        return []
+    except (KeyError, TypeError, IndexError) as e:
+        logging.warning(f"Could not find a valid list/dict at path {path}: {e}")
+        return []
+
+def transform_data(parsed_data: Union[Dict, List[str]], config: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """
+    (T)ransforms parsed data (from JSON, XML, or Text) into a standardized
+    list of dictionaries for MongoDB insertion.
+    
+    - Adds a consistent 'ingestion_timestamp' to each record.
+    - Converts text-based IP lists into a structured dictionary.
+    """
+    records_list = []
+    ingestion_time = datetime.utcnow()
+    data_format = config.get("format")
+
+    try:
+        if data_format in ("json", "xml"):
+            # parsed_data is a Dict. We need to find the list of records inside it.
+            records_list = get_nested_data(parsed_data, config.get("data_key_path", []))
+            logging.info(f"Transforming {len(records_list)} {data_format} records...")
+            for record in records_list:
+                if isinstance(record, dict):
+                    record['ingestion_timestamp'] = ingestion_time
         
-        try:
-            api_response = requests.get(
-                self.CISA_API_ENDPOINT,
-                headers=request_headers,
-                timeout=self.REQUEST_TIMEOUT
+        elif data_format == "text":
+            # parsed_data is a List[str]. We need to convert it to a List[Dict].
+            logging.info(f"Transforming {len(parsed_data)} text-based records...")
+            for item in parsed_data:
+                ip_str = item.strip()
+                if ip_str:  # Ensure it's not an empty line
+                    records_list.append({
+                        "ip_address": ip_str,
+                        "ingestion_timestamp": ingestion_time
+                    })
+        
+        else:
+            logging.warning(f"Unknown format in transform_data: {data_format}")
+            return []
+
+        logging.info(f"Transformation complete. {len(records_list)} records prepared.")
+        return records_list
+
+    except Exception as e:
+        logging.error(f"Error during transformation: {e}")
+        return []
+
+
+def load_data(records: List[Dict[str, Any]], collection_name: str, unique_id_key: str):
+    """
+    (L)oads transformed data into a specified MongoDB collection using an efficient
+    'upsert' strategy (update if exists, insert if new).
+    """
+    if not records:
+        logging.warning(f"No records to load into '{collection_name}'.")
+        return
+
+    logging.info(f"Connecting to MongoDB to load data into '{collection_name}'...")
+    try:
+        # Use a context manager for safe and automatic connection handling
+        with MongoClient(MONGO_URI) as client:
+            db = client[DB_NAME]
+            collection = db[collection_name]
+            
+            # Prepare a list of 'ReplaceOne' operations for bulk writing
+            operations = []
+            for record in records:
+                unique_id = record.get(unique_id_key)
+                if isinstance(record, dict) and unique_id:
+                    operations.append(
+                        ReplaceOne(
+                            {unique_id_key: unique_id},  # Filter: Find doc with this ID
+                            record,                      # New data to replace/insert
+                            upsert=True                  # The 'upsert' flag
+                        )
+                    )
+                else:
+                    logging.warning(f"Skipping record in '{collection_name}' (missing '{unique_id_key}' or not a dict).")
+
+            if not operations:
+                logging.warning(f"No valid records with unique IDs to load into '{collection_name}'.")
+                return
+
+            # Execute the bulk operation
+            logging.info(f"Performing bulk upsert of {len(operations)} records into '{collection_name}'...")
+            result = collection.bulk_write(operations)
+            logging.info(
+                f"MongoDB write to '{collection_name}' complete. "
+                f"Inserted: {result.inserted_count}, "
+                f"Updated: {result.modified_count}, "
+                f"Upserted: {result.upserted_count}"
             )
-            
-            # Check if request was successful
-            api_response.raise_for_status()
-            
-            # Parse JSON response
-            vulnerability_data = api_response.json()
-            
-            # Validate response structure
-            if not isinstance(vulnerability_data, dict):
-                raise ValueError("API returned invalid data format")
-            
-            if 'vulnerabilities' not in vulnerability_data:
-                raise KeyError("Missing 'vulnerabilities' key in API response")
-            
-            vuln_list = vulnerability_data.get('vulnerabilities', [])
-            catalog_version = vulnerability_data.get('catalogVersion', 'Unknown')
-            
-            logger.info(f"Data fetch successful - Catalog: {catalog_version}, Records: {len(vuln_list)}")
-            return vulnerability_data
-            
-        except requests.exceptions.Timeout:
-            logger.error("Request timeout - CISA API did not respond within time limit")
-            return None
-        except requests.exceptions.ConnectionError:
-            logger.error("Connection error - Unable to reach CISA API")
-            return None
-        except requests.exceptions.HTTPError as http_err:
-            logger.error(f"HTTP error occurred: {http_err}")
-            return None
-        except json.JSONDecodeError:
-            logger.error("Failed to decode JSON response from API")
-            return None
-        except Exception as general_error:
-            logger.error(f"Unexpected error during data fetch: {general_error}")
-            return None
-    
-    def process_vulnerability_records(self, api_data):
 
-        if not api_data or not isinstance(api_data, dict):
-            logger.warning("No valid data provided for processing")
-            return []
-        
-        vulnerability_records = api_data.get('vulnerabilities', [])
-        
-        if not vulnerability_records:
-            logger.warning("No vulnerability records found in API data")
-            return []
-        
-        logger.info(f"Processing {len(vulnerability_records)} vulnerability records...")
-        
-        # Extract catalog metadata
-        catalog_metadata = {
-            'source_catalog_version': api_data.get('catalogVersion'),
-            'catalog_release_date': api_data.get('dateReleased'),
-            'total_vulnerabilities': api_data.get('count'),
-            'data_extraction_time': datetime.utcnow().isoformat()
-        }
-        
-        processed_vulnerabilities = []
-        
-        for index, vulnerability in enumerate(vulnerability_records):
-            try:
-                enhanced_record = self._enhance_vulnerability_record(
-                    vulnerability, catalog_metadata, index
-                )
-                
-                if enhanced_record:
-                    processed_vulnerabilities.append(enhanced_record)
-                    
-            except Exception as processing_error:
-                logger.warning(f"Failed to process record {index}: {processing_error}")
-                continue
-        
-        logger.info(f"Successfully processed {len(processed_vulnerabilities)} records")
-        return processed_vulnerabilities
-    
-    def _enhance_vulnerability_record(self, vuln_record, catalog_info, record_position):
+    except ConnectionFailure as e:
+        logging.error(f"MongoDB connection failed: {e}")
+    except PyMongoError as e:
+        logging.error(f"Error loading data to MongoDB collection '{collection_name}': {e}")
+    except Exception as e:
+        logging.error(f"An unexpected error occurred during data load: {e}")
 
-        enhanced_vuln = dict(vuln_record)
-        
-        processing_time = datetime.utcnow()
-        enhanced_vuln.update({
-            'record_processed_at': processing_time,
-            'processing_date': processing_time.date().isoformat(),
-            'record_position': record_position,
-            'source_system': 'cisa_kev_catalog',
-            'catalog_information': catalog_info
-        })
-        
-        # Parse date fields if they exist
-        date_fields_to_parse = ['dateAdded', 'dueDate']
-        for date_field in date_fields_to_parse:
-            if date_field in vuln_record and vuln_record[date_field]:
-                try:
-                    parsed_date = datetime.strptime(vuln_record[date_field], '%Y-%m-%d')
-                    enhanced_vuln[f'{date_field}_datetime'] = parsed_date
-                except ValueError as date_error:
-                    logger.debug(f"Could not parse {date_field}: {date_error}")
-        
-        return enhanced_vuln
+# --- 4. ETL Orchestrator ---
+
+def run_etl_pipeline(config: Dict[str, Any]):
+    """
+    Runs the full E-T-L process for a single configured endpoint.
+    This function orchestrates the extract, parse, transform, and load steps.
+    """
+    collection_name = config["collection"]
+    data_format = config.get("format", "json") # Default to json
     
-    def store_in_mongodb(self, processed_records):
-        if not processed_records:
-            logger.warning("No records provided for storage")
-            return False
-        
-        logger.info(f"Storing {len(processed_records)} records in MongoDB...")
-        
-        mongo_client = None
-        try:
-            mongo_client = MongoClient(self.mongo_uri)
-            target_database = mongo_client[self.database_name]
-            vulnerability_collection = target_database[self.TARGET_COLLECTION]
-            
-            # Clear existing data for fresh load
-            existing_record_count = vulnerability_collection.count_documents({})
-            if existing_record_count > 0:
-                vulnerability_collection.delete_many({})
-                logger.info(f"Removed {existing_record_count} existing records")
-            
-            insertion_result = vulnerability_collection.insert_many(processed_records)
-            records_inserted = len(insertion_result.inserted_ids)
-            
-            self._create_collection_indexes(vulnerability_collection)
-            
-            logger.info(f"Successfully stored {records_inserted} vulnerability records")
-            return True
-            
-        except Exception as storage_error:
-            logger.error(f"MongoDB storage operation failed: {storage_error}")
-            return False
-        finally:
-            if mongo_client:
-                mongo_client.close()
-                logger.info("MongoDB connection closed")
+    logging.info(f"--- Starting ETL for {config['name']} ({collection_name}) ---")
     
-    def _create_collection_indexes(self, collection):
-        try:
-            # Index on CVE ID for fast lookups
-            collection.create_index("cveID", unique=True)
-            # Index on vendor for filtering
-            collection.create_index("vendorProject")
-            # Index on processing timestamp for time-based queries
-            collection.create_index("record_processed_at")
-            logger.info("Database indexes created successfully")
-        except Exception as index_error:
-            logger.warning(f"Index creation failed: {index_error}")
+    # 1. EXTRACT raw text data
+    raw_text = extract_data(config["url"])
+    if not raw_text:
+        logging.error(f"Stopping ETL for {collection_name} due to extraction failure.")
+        return
+
+    # 2. PARSE the text into a usable structure (Dict or List)
+    parsed_data = None
+    try:
+        if data_format == "json":
+            parsed_data = json.loads(raw_text)  # Returns Dict
+        elif data_format == "xml":
+            parsed_data = xmltodict.parse(raw_text)  # Returns Dict
+        elif data_format == "text":
+            parsed_data = raw_text.splitlines()  # Returns List[str]
+        else:
+            logging.error(f"Unknown data format '{data_format}' for {collection_name}")
+            return
+    except Exception as e:
+        logging.error(f"Failed to parse data for {collection_name}: {e}")
+        return
+
+    # 3. TRANSFORM the data
+    records_to_load = transform_data(parsed_data, config)
+
+    # 4. LOAD the final records into the database
+    load_data(records_to_load, collection_name, config["id_key"])
     
-    def execute_complete_pipeline(self):
-        pipeline_start_time = datetime.utcnow()
-        
-        logger.info("=" * 60)
-        logger.info("CISA VULNERABILITY ETL PIPELINE STARTING")
-        logger.info("=" * 60)
-        
-        try:
-            logger.info("PHASE 1: Data Extraction")
-            raw_vulnerability_data = self.fetch_vulnerability_data()
-            
-            if not raw_vulnerability_data:
-                logger.error("Data extraction failed - terminating pipeline")
-                return False
-            
-            logger.info("PHASE 2: Data Transformation")
-            processed_data = self.process_vulnerability_records(raw_vulnerability_data)
-            
-            if not processed_data:
-                logger.error("Data transformation failed - terminating pipeline")
-                return False
-            
-            logger.info("PHASE 3: Data Storage")
-            storage_success = self.store_in_mongodb(processed_data)
-            
-            if not storage_success:
-                logger.error("Data storage failed - pipeline incomplete")
-                return False
-            
-            # Calculate pipeline execution time
-            pipeline_duration = (datetime.utcnow() - pipeline_start_time).total_seconds()
-            
-            logger.info("=" * 60)
-            logger.info(f"PIPELINE COMPLETED SUCCESSFULLY in {pipeline_duration:.1f} seconds")
-            logger.info(f"Total vulnerabilities processed: {len(processed_data)}")
-            logger.info("=" * 60)
-            
-            return True
-            
-        except Exception as pipeline_error:
-            logger.error(f"Pipeline execution failed: {pipeline_error}")
-            return False
+    logging.info(f"--- Finished ETL for {config['name']} ---")
+
+# --- 5. Main Execution ---
 
 def main():
-    print("\nCISA Vulnerability Intelligence ETL Pipeline")
-    print("Extracting Known Exploited Vulnerabilities Data")
-    print("-" * 50)
+    """
+    Main function to run the entire ETL process for all configured endpoints.
+    """
+    logging.info("====== Starting Master ETL Process ======")
     
-    try:
-        etl_pipeline = CISAVulnerabilityETL()
-        
-        pipeline_success = etl_pipeline.execute_complete_pipeline()
-        
-        print("-" * 50)
-        if pipeline_success:
-            print("ETL Pipeline completed successfully!")
-            print("Vulnerability data is now available in MongoDB")
-        else:
-            print("ETL Pipeline encountered errors!")
-            print("Check logs for detailed error information")
-            
-    except Exception as app_error:
-        logger.error(f"Application startup failed: {app_error}")
-        print(f"Application error: {app_error}")
+    for endpoint_config in ENDPOINTS_TO_PROCESS:
+        run_etl_pipeline(endpoint_config)
+
+    logging.info("======= Master ETL Process Finished =======")
 
 if __name__ == "__main__":
     main()
