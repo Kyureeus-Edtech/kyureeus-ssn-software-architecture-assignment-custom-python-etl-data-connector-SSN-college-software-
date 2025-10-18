@@ -48,16 +48,30 @@ In this ETL we keep:
   - **description** – Additional descriptive context about the indicator.
 - **ingestion_timestamp** – UTC timestamp of when the record was fetched and stored, used for auditing and data freshness tracking.
 ---
+
+| Endpoint                        | Description                                           | Parameters                                                     | Target MongoDB Collection |
+| ------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------- | ------------------------- |
+| `/pulses/subscribed`            | Fetch pulses the user is subscribed to                | `limit` (default 10), `page`, `modified_since` (optional)      | `subscribed_pulses`       |
+| `/pulses/{pulse_id}`            | Fetch detailed information for a specific pulse       | `pulse_id` (required)                                          | `subscribed_pulses`       |
+| `/pulses/{pulse_id}/indicators` | Fetch all indicators associated with a pulse          | `pulse_id` (required), `limit`, `page`                         | `pulse_indicators`        |
+| `/indicator/{type}/{value}`     | Fetch detailed information about a specific indicator | `type` (e.g., IPv4, domain, SHA256), `value` (indicator value) | `indicator_details`       |
+
+
+* All endpoints require `X-OTX-API-KEY` in the request header.
+* The ETL wraps responses to match the MongoDB structure (e.g., pulses in `"results"` list).
+* The `ingestion_timestamp` field is added to all records for auditing and freshness tracking.
+
+---
 **Setup Instructions** 
 1. Clone the repository and open the project folder.  
 
 2. Create a `.env` file with the following content:  
 ```
 OTX_API_KEY=your_otx_api_key_here
-MONGO_URI=your_mongo_connection_uri_here
-DB_NAME=your_database_name_here
-COLLECTION_NAME=your_collection_name_here
-LIMIT=100
+MONGO_URI=mongodb://localhost:27017/
+DB_NAME=SSN_ETL_assignment
+COLLECTION_NAME=otx_pulses_raw
+LIMIT=10
 MODIFIED_SINCE=
 ```
 
