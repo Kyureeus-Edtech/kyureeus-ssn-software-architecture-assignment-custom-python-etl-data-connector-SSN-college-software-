@@ -542,8 +542,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Author:** Rohith Venkatakrishnan  
 **Student ID:** 3122225001111  
-**Email:** [Your Email Address]  
-**Institution:** [Your Institution]
+**Email:** rohith2210194@ssn.edu.in
 
 ### Resources
 
