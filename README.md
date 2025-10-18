@@ -1,135 +1,162 @@
-# SSN-college-software-architecture-Assignments-
-Assignment repository for building custom Python ETL data connectors (Kyureeus EdTech, SSN CSE). Students: Submit your ETL scripts here. Make sure your commit message includes your name and roll number.
-# Software Architecture Assignment: Custom Python ETL Data Connector
+# DNS ETL Pipeline
 
-Welcome to the official repository for submitting your Software Architecture assignment on building custom data connectors (ETL pipelines) in Python. This assignment is part of the Kyureeus EdTech program for SSN CSE students.
+A simple ETL pipeline that fetches DNS records and stores them in MongoDB.
 
----
-Guideline: Building and Managing Custom Data Connectors (ETL Pipeline) in Python
+Used Public DoH servers since they are free DNS resolvers that let anyone query DNS records over HTTPS.
 
-1. Setting Up the Connector Environment
-a. Choose Your API Provider: Identify a data provider and understand its Base URL, Endpoints, and Authentication.
-b. Understand the API Documentation: Focus on headers, query params, pagination, rate limits, and response structure.
+## 📦 Installation
 
+```bash
+pip install -r requirements.txt
+```
 
-2. Secure API Authentication Using Environment Variables
-a. Create a `.env` File Locally: Store API keys and secrets as KEY=VALUE pairs.
-b. Load Environment Variables in Code: Use libraries like `dotenv` to securely load environment variables.
+## 📁 Files
 
+- `etl.py` - Main ETL script (auto-detects network and fetches DNS data)
+- `domains.txt` - List of domains to query (one per line)
+- `.env` - MongoDB connection string
+- `requirements.txt` - Python dependencies
 
-3. Design the ETL Pipeline
-Extract: Connect to the API, pass tokens/headers, and collect JSON data.
-Transform: Clean or reformat the data for MongoDB compatibility.
-Load: Store the transformed data into a MongoDB collection.
+## ⚙️ Setup
 
+1. **Install MongoDB** (if not already installed)
+```bash
+# Check if MongoDB is running
+mongosh
+```
 
-4. MongoDB Collection Strategy
-Use one collection per connector, e.g., `connector_name_raw`.
-Store ingestion timestamps to support audits or updates.
+2. **Create `.env` file**
+```bash
+MONGO_URI=mongodb://localhost:27017
+```
 
+3. **Add domains to `domains.txt`**
+```
+google.com
+github.com
+amazon.com
+```
 
-5. Iterative Testing & Validation
-Test for invalid responses, empty payloads, rate limits, and connectivity errors.
-Ensure consistent insertion into MongoDB.
+## 🚀 Run
 
+```bash
+python etl.py
+```
 
-6. Git and Project Structure Guidelines
-a. Use a Central Git Repository: Clone the shared repo and create a new branch for your connector.
-b. Ignore Secrets: Add `.env` to `.gitignore` before the first commit.
-c. Push and Document: Write README.md with endpoint details, API usage, and example output.
+## 📊 What It Does
 
+1. Loads domains from `domains.txt`
+2. Tests network connectivity (tries DNS-over-HTTPS first, falls back to traditional DNS)
+3. Queries 3 record types for each domain:
+   - **A records** (IP addresses)
+   - **MX records** (Mail servers)
+   - **TXT records** (Text records like SPF, DKIM)
+4. Stores results in MongoDB database `doh_etl`, collection `dns_records_raw`
 
-Final Checklist for Students
-Understand API documentation
-Secure credentials in `.env`
-Build complete ETL script
-Validate MongoDB inserts
-Push code to your branch
-Include descriptive README
-Submit Pull Request
+## 📈 Output
 
-## 📋 Assignment Overview
+```
+🔍 Testing DNS connectivity methods...
+   ✅ Traditional DNS working (using 8.8.8.8)
 
-**Goal:**  
-Develop a Python script to connect with an API provider, extract data, transform it for compatibility, and load it into a MongoDB collection. Follow secure coding and project structure practices as outlined below.
+[1/20] google.com
+   ✅ [DNS-8.8.8.8] google.com A → 1 answers
+   ✅ [DNS-8.8.8.8] google.com MX → 1 answers
+   ✅ [DNS-8.8.8.8] google.com TXT → 12 answers
 
----
-
-## ✅ Submission Checklist
-
-- [ ] Choose a data provider (API) and understand its documentation
-- [ ] Secure all API credentials using a `.env` file
-- [ ] Build a complete ETL pipeline: Extract → Transform → Load (into MongoDB)
-- [ ] Test and validate your pipeline (handle errors, invalid data, rate limits, etc.)
-- [ ] Follow the provided Git project structure
-- [ ] Write a clear and descriptive `README.md` in your folder with API details and usage instructions
-- [ ] **Include your name and roll number in your commit messages**
-- [ ] Push your code to your branch and submit a Pull Request
-
----
-
-## 📦 Project Structure
-
-/your-branch-name/
-├── etl_connector.py
-├── .env
-├── requirements.txt
-├── README.md
-└── (any additional scripts or configs)
+🎯 ETL COMPLETED!
+✅ Success: 60
+❌ Failed: 0
+📈 Success Rate: 100.0%
+```
+![alt text](image.png)
 
 
-- **`.env`**: Store sensitive credentials; do **not** commit this file.
-- **`etl_connector.py`**: Your main ETL script.
-- **`requirements.txt`**: List all Python dependencies.
-- **`README.md`**: Instructions for your connector.
+## 🗄️ MongoDB Data
 
----
+**Database:** `doh_etl`  
+**Collection:** `dns_records_raw`
 
-## 🛡️ Secure Authentication
+### Sample Document
 
-- Store all API keys/secrets in a local `.env` file.
-- Load credentials using the `dotenv` Python library.
-- Add `.env` to `.gitignore` before committing.
+```json
+{
+  "domain": "google.com",
+  "record_type": "A",
+  "dns_response": {
+    "Status": 0,
+    "Answer": [{"data": "142.250.185.46"}]
+  },
+  "method": "Traditional-DNS",
+  "provider": "DNS-8.8.8.8",
+  "status": 0,
+  "has_answer": true,
+  "answer_count": 1,
+  "ingested_at": "2025-10-18T10:55:23Z"
+}
+```
+![alt text](image-1.png)
 
----
+## 🔍 Query Examples
 
-## 🗃️ MongoDB Guidelines
+```javascript
+// View all records
+db.dns_records_raw.find()
 
-- Use one MongoDB collection per connector (e.g., `connectorname_raw`).
-- Store ingestion timestamps for audit and update purposes.
+// Count by record type
+db.dns_records_raw.aggregate([
+  {$group: {_id: "$record_type", count: {$sum: 1}}}
+])
 
----
+// Get specific domain records
+db.dns_records_raw.find({domain: "google.com"})
 
-## 🧪 Testing & Validation
+// Find domains with most answers
+db.dns_records_raw.find().sort({answer_count: -1})
+```
 
-- Check for invalid responses, empty payloads, rate limits, and connectivity issues.
-- Ensure data is correctly inserted into MongoDB.
+## 🛠️ Troubleshooting
 
----
+### "domains.txt not found"
+Create the file in the same directory as `etl.py`
 
-## 📝 Git & Submission Guidelines
+### "MongoDB connection failed"
+Make sure MongoDB is running:
+```bash
+# Windows
+net start MongoDB
 
-1. **Clone the repository** and create your own branch.
-2. **Add your code and documentation** in your folder/branch.
-3. **Do not commit** your `.env` or secrets.
-4. **Write clear commit messages** (include your name and roll number).
-5. **Submit a Pull Request** when done.
+# Linux/Mac
+sudo systemctl start mongod
+```
 
----
+### "No DNS method is working"
+Check your internet connection and firewall settings
 
-## 💡 Additional Resources
+## 📦 Dependencies
 
-- [python-dotenv Documentation](https://saurabh-kumar.com/python-dotenv/)
-- [MongoDB Python Driver (PyMongo)](https://pymongo.readthedocs.io/en/stable/)
-- [API Documentation Example](https://restfulapi.net/)
+```
+requests==2.31.0
+pymongo==4.6.1
+python-dotenv==1.0.0
+dnspython==2.4.2
+```
 
----
+## 📊 Statistics
 
-## 📢 Need Help?
+- **20 domains** processed
+- **3 record types** per domain (A, MX, TXT)
+- **60 total queries**
+- **100% success rate**
+- **~26 seconds** execution time
 
-- Post your queries in the [KYUREEUS/SSN College - WhatsApp group](#) .
-- Discuss issues, share progress, and help each other.
+## 🎯 Use Cases
 
----
+- DNS monitoring and change tracking
+- Security research (finding missing SPF/DKIM records)
+- Infrastructure mapping (discovering mail servers, IPs)
+- Domain validation and verification
 
-Happy coding! 🚀
+## 📝 License
+
+MIT License - Free to use for educational or commercial projects.
