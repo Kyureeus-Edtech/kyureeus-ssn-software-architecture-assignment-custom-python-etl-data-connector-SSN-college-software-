@@ -1,0 +1,18 @@
+{
+  "type": "bundle",
+  "id": "bundle--sample-1234",
+  "objects": [
+    {
+      "type": "attack-pattern",
+      "id": "attack-pattern--001",
+      "name": "Sample Attack",
+      "description": "This is a sample attack pattern for testing.",
+      "external_references": []
+    },
+    {
+      "type": "malware",
+      "id": "malware--001",
+      "name": "Sample Malware"
+    }
+  ]
+}
