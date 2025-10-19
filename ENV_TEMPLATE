@@ -1,0 +1,13 @@
+# PublicWWW API Configuration
+
+PUBLICWWW_API_KEY=your_api_key_here
+PUBLICWWW_BASE_URL=https://publicwww.com/api
+
+# MongoDB Configuration
+
+MONGODB_URI=mongodb://localhost:27017/
+MONGODB_DATABASE=etl_database
+
+# Rate Limiting (seconds between requests)
+
+RATE_LIMIT_DELAY=1.0
