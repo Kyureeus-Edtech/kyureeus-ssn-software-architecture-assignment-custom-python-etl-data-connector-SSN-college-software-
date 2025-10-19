@@ -130,6 +130,7 @@ When fetched, the endpoint returns rules for a specific language or quality prof
                 }
             ]
         }, ...] }
+
 ---
 
 ## 📂 Project Structure
@@ -268,11 +269,13 @@ Documents in MongoDB will look like:
 
 ![Sonarqube rules in MongoDB](images/SQ_Rules_Mongo.png)
 
+---
+
 ## Limitations
 
 **Paginated Endpoints:**
 
-/api/rules/search is paginated. The current ETL fetches only a single page by default. To retrieve all rules, the ETL should loop through all pages using p (page number) and ps (page size).
+`/api/rules/search` is paginated. The current ETL fetches only a single page by default. To retrieve all rules, the ETL should loop through all pages using p (page number) and ps (page size).
 
 **Authentication Required:**
 
