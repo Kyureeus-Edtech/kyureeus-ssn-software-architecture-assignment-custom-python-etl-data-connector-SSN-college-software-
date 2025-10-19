@@ -1,135 +1,126 @@
-# SSN-college-software-architecture-Assignments-
-Assignment repository for building custom Python ETL data connectors (Kyureeus EdTech, SSN CSE). Students: Submit your ETL scripts here. Make sure your commit message includes your name and roll number.
-# Software Architecture Assignment: Custom Python ETL Data Connector
+# RDAP ETL Pipeline  
 
-Welcome to the official repository for submitting your Software Architecture assignment on building custom data connectors (ETL pipelines) in Python. This assignment is part of the Kyureeus EdTech program for SSN CSE students.
-
----
-Guideline: Building and Managing Custom Data Connectors (ETL Pipeline) in Python
-
-1. Setting Up the Connector Environment
-a. Choose Your API Provider: Identify a data provider and understand its Base URL, Endpoints, and Authentication.
-b. Understand the API Documentation: Focus on headers, query params, pagination, rate limits, and response structure.
-
-
-2. Secure API Authentication Using Environment Variables
-a. Create a `.env` File Locally: Store API keys and secrets as KEY=VALUE pairs.
-b. Load Environment Variables in Code: Use libraries like `dotenv` to securely load environment variables.
-
-
-3. Design the ETL Pipeline
-Extract: Connect to the API, pass tokens/headers, and collect JSON data.
-Transform: Clean or reformat the data for MongoDB compatibility.
-Load: Store the transformed data into a MongoDB collection.
-
-
-4. MongoDB Collection Strategy
-Use one collection per connector, e.g., `connector_name_raw`.
-Store ingestion timestamps to support audits or updates.
-
-
-5. Iterative Testing & Validation
-Test for invalid responses, empty payloads, rate limits, and connectivity errors.
-Ensure consistent insertion into MongoDB.
-
-
-6. Git and Project Structure Guidelines
-a. Use a Central Git Repository: Clone the shared repo and create a new branch for your connector.
-b. Ignore Secrets: Add `.env` to `.gitignore` before the first commit.
-c. Push and Document: Write README.md with endpoint details, API usage, and example output.
-
-
-Final Checklist for Students
-Understand API documentation
-Secure credentials in `.env`
-Build complete ETL script
-Validate MongoDB inserts
-Push code to your branch
-Include descriptive README
-Submit Pull Request
-
-## 📋 Assignment Overview
-
-**Goal:**  
-Develop a Python script to connect with an API provider, extract data, transform it for compatibility, and load it into a MongoDB collection. Follow secure coding and project structure practices as outlined below.
+An ETL (Extract–Transform–Load) pipeline that fetches RDAP (Registration Data Access Protocol) data for **domains, IP addresses, and ASNs**, transforms it into a simplified format, and stores it in **MongoDB** for further analysis.  
 
 ---
 
-## ✅ Submission Checklist
+## 📖 Overview  
 
-- [ ] Choose a data provider (API) and understand its documentation
-- [ ] Secure all API credentials using a `.env` file
-- [ ] Build a complete ETL pipeline: Extract → Transform → Load (into MongoDB)
-- [ ] Test and validate your pipeline (handle errors, invalid data, rate limits, etc.)
-- [ ] Follow the provided Git project structure
-- [ ] Write a clear and descriptive `README.md` in your folder with API details and usage instructions
-- [ ] **Include your name and roll number in your commit messages**
-- [ ] Push your code to your branch and submit a Pull Request
+This project demonstrates a complete ETL process using Python:  
+- **Extract:** Fetch RDAP data from `rdap.org` API for domains, IPs, and ASNs.  
+- **Transform:** Normalize and extract useful fields (e.g., handle, status, entities, nameservers).  
+- **Load:** Store cleaned data into MongoDB collections for easy querying.  
+- **Validation:** Built-in pipeline tests handle invalid inputs, API errors, and empty responses.  
 
 ---
 
-## 📦 Project Structure
+## ✨ Features  
 
-/your-branch-name/
-├── etl_connector.py
-├── .env
-├── requirements.txt
-├── README.md
-└── (any additional scripts or configs)
-
-
-- **`.env`**: Store sensitive credentials; do **not** commit this file.
-- **`etl_connector.py`**: Your main ETL script.
-- **`requirements.txt`**: List all Python dependencies.
-- **`README.md`**: Instructions for your connector.
+- Fetch RDAP data for **Domains, IPs, and ASNs**.  
+- Automatic **retry and backoff** on API rate limits or network errors.  
+- **Data transformation** (flattened entities, trimmed keys).  
+- **MongoDB storage** with separate collections (`rdap_domain_raw`, `rdap_ip_raw`, `rdap_asn_raw`).  
+- Validation tests for:  
+  - Invalid/edge-case inputs  
+  - Empty responses  
+  - MongoDB insertion checks  
+- Example outputs displayed for clarity (one per type).  
 
 ---
 
-## 🛡️ Secure Authentication
+## ⚙️ Requirements  
 
-- Store all API keys/secrets in a local `.env` file.
-- Load credentials using the `dotenv` Python library.
-- Add `.env` to `.gitignore` before committing.
-
----
-
-## 🗃️ MongoDB Guidelines
-
-- Use one MongoDB collection per connector (e.g., `connectorname_raw`).
-- Store ingestion timestamps for audit and update purposes.
+- Python 3.8+  
+- MongoDB (local or cloud instance)  
+- Dependencies (installed via `pip`):  
+  - `requests`  
+  - `pymongo`  
+  - `python-dotenv`  
 
 ---
 
-## 🧪 Testing & Validation
+## 📦 Installation  
 
-- Check for invalid responses, empty payloads, rate limits, and connectivity issues.
-- Ensure data is correctly inserted into MongoDB.
+1. Clone the repository:  
+   ```bash
+   git clone https://github.com/yourusername/rdap-etl-pipeline.git
+   cd rdap-etl-pipeline
+   ```
 
----
+2. Create a virtual environment and activate it:  
+   ```bash
+   python -m venv venv
+   source venv/bin/activate   # On macOS/Linux
+   venv\Scripts\activate      # On Windows
+   ```
 
-## 📝 Git & Submission Guidelines
-
-1. **Clone the repository** and create your own branch.
-2. **Add your code and documentation** in your folder/branch.
-3. **Do not commit** your `.env` or secrets.
-4. **Write clear commit messages** (include your name and roll number).
-5. **Submit a Pull Request** when done.
-
----
-
-## 💡 Additional Resources
-
-- [python-dotenv Documentation](https://saurabh-kumar.com/python-dotenv/)
-- [MongoDB Python Driver (PyMongo)](https://pymongo.readthedocs.io/en/stable/)
-- [API Documentation Example](https://restfulapi.net/)
+3. Install dependencies:  
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 ---
 
-## 📢 Need Help?
+## 🔑 Environment Variables  
 
-- Post your queries in the [KYUREEUS/SSN College - WhatsApp group](#) .
-- Discuss issues, share progress, and help each other.
+Create a `.env` file in the project root:  
+
+```env
+MONGO_URI=mongodb://localhost:27017/
+DB_NAME=rdap_db
+```
+
+Defaults are used if not provided:  
+- `MONGO_URI` → `<MONGO DB URI>`
+- `DB_NAME` → `DB name` 
+must be set in `.env`  
 
 ---
 
-Happy coding! 🚀
+## 🚀 Usage  
+
+Run the ETL pipeline:  
+```bash
+python etl_connector.py
+```
+
+This will:  
+1. Fetch RDAP data for sample domains, IPs, and ASNs.  
+2. Transform and display one sample record per type.  
+3. Insert all records into MongoDB.  
+4. Run validation tests.  
+
+---
+
+## 🌐 API Endpoints Used  
+
+Data is fetched from **[RDAP.org](https://rdap.org/)**:  
+- Domain: `https://rdap.org/domain/{domain}`  
+- IP: `https://rdap.org/ip/{ip}`  
+- ASN: `https://rdap.org/autnum/{asn}`  
+
+---
+
+## 📝 Example Output 
+Raw ASN data:
+
+[![Raw](output_images/raw_asn_data.png)](output_images/raw_asn_data.png)
+
+Transformed ASN data:  
+[![transformed](output_images/transformed_asn_data.png)](output_images/transformed_asn_data.png)
+
+MongoDB collections:
+[![mongo](output_images/mongo_collections.png)](output_images/mongo_collections.png)
+
+MongoDB data Load:
+[![mongo](output_images/mongo_data.png)](output_images/mongo_data.png)
+
+---
+
+## 📜 License  
+
+This project is licensed under the **MIT License** – you are free to use, modify, and distribute it.  
+
+---
+
+ 
