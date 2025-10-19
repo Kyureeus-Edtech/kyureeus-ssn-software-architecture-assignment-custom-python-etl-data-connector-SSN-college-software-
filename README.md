@@ -86,6 +86,7 @@ The ETL process standardizes this data into a MongoDB-compatible structure, maki
   * `ics_attack`
 * Before inserting, the script clears the existing collection to avoid duplication.
 * The number of records inserted per domain is logged in the terminal for transparency.
+<img width="1375" height="582" alt="image" src="https://github.com/user-attachments/assets/858b7983-c373-4583-8c97-ef806c385165" />
 
 ---
 
@@ -112,6 +113,15 @@ Each major ETL stage (Extract → Transform → Load) prints detailed logs in th
 * Confirmation messages for database insertions.
 
 This ensures full visibility of data flow and helps in debugging or extending the ETL logic.
+
+<img width="1409" height="479" alt="image" src="https://github.com/user-attachments/assets/d20569ab-3d9f-429e-8cec-7685193da474" />
+
+---
+<img width="1599" height="480" alt="image" src="https://github.com/user-attachments/assets/8a54e729-5c19-477d-bc4d-375ed2c1d897" />
+
+---
+<img width="1581" height="479" alt="image" src="https://github.com/user-attachments/assets/6ab21df2-f308-4f82-9e1b-8d9d2bb29692" />
+
 
 ---
 
