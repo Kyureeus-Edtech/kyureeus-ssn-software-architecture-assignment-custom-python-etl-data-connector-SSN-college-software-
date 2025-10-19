@@ -1,0 +1,13 @@
+# MongoDB connection
+MONGO_URI=your_mongodb_connection_string
+MONGO_DB=your_database_name
+
+# Cloudflare DNS (DoH)
+CLOUDFLARE_DOHE_URL=https://cloudflare-dns.com/dns-query
+
+# Google DNS (DoH)
+GOOGLE_DOHE_URL=https://dns.google/resolve
+
+# NextDNS DoH
+NEXTDNS_PROFILE_ID=your_nextdns_profile_id
+NEXTDNS_DOHE_URL=https://dns.nextdns.io/${NEXTDNS_PROFILE_ID}
