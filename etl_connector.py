@@ -1,231 +1,113 @@
-#!/usr/bin/env python3
-"""
-Spamhaus DROP List ETL Connector
-- Extracts the DROP (Don't Route Or Peer) list from Spamhaus
-- Transforms lines into JSON records
-- Loads/upserts into MongoDB
-Secure settings are pulled from .env
-
-Author: Vidisha Desai
-Roll No.: 3122225001154
-"""
-
 import os
-import sys
-import time
-import logging
 import requests
-from datetime import datetime, timezone
-from typing import List, Dict, Optional
-
-from dotenv import load_dotenv
-from pymongo import MongoClient, UpdateOne
+import datetime
+from pymongo import MongoClient
 from pymongo.errors import PyMongoError
+from dotenv import load_dotenv
 
-# ---------- Logging Setup ----------
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-logger = logging.getLogger("spamhaus_drop_etl")
+load_dotenv()
 
+API_KEY = os.getenv("GREYNOISE_API_KEY")
+MONGO_URI = os.getenv("MONGO_URI")
+HEADERS = {"Accept": "application/json", "key": API_KEY}
 
-def load_settings() -> Dict[str, str]:
-    """Load environment variables from .env and validate required keys."""
-    load_dotenv()
+client = MongoClient(MONGO_URI)
+db = client["greynoise_db"]
 
-    required_keys = [
-        "BASE_URL",
-        "ENDPOINT",
-        "MONGO_URI",
-        "DB_NAME",
-        "COLLECTION_NAME",
-        "CONNECTOR_NAME",
-        # Optional:
-        # "REQUEST_TIMEOUT",
-        # "USER_AGENT",
-        # "VERIFY_TLS"
-    ]
+BASE_URL_V3 = "https://api.greynoise.io/v3"
+BASE_URL_V1 = "https://api.greynoise.io/v1"
 
-    cfg = {}
-    missing = []
-    for k in required_keys:
-        v = os.getenv(k)
-        if not v:
-            missing.append(k)
-        else:
-            cfg[k] = v
-
-    # Optional configs with defaults
-    cfg["REQUEST_TIMEOUT"] = float(os.getenv("REQUEST_TIMEOUT", "20"))
-    cfg["USER_AGENT"] = os.getenv("USER_AGENT", f"{cfg.get('CONNECTOR_NAME','SpamhausConnector')}/1.0 (+student-etl)")
-    cfg["VERIFY_TLS"] = os.getenv("VERIFY_TLS", "true").lower() not in ("0", "false", "no")
-    cfg["BATCH_SIZE"] = int(os.getenv("BATCH_SIZE", "500"))
-    cfg["METADATA_COLLECTION"] = os.getenv("METADATA_COLLECTION", f"{cfg['CONNECTOR_NAME'].lower().replace(' ', '_')}_meta")
-
-    if missing:
-        raise RuntimeError(f"Missing required environment variables: {', '.join(missing)}")
-
-    return cfg
+def safe_api_get(url, params=None):
+    """Helper for API GET requests with error handling."""
+    try:
+        resp = requests.get(url, headers=HEADERS, params=params, timeout=10)
+        if resp.status_code == 429:
+            print(f"[Rate Limit] Too many requests to {url}")
+            return None, "Rate limit exceeded"
+        elif resp.status_code >= 400:
+            print(f"[Error] HTTP {resp.status_code} for {url}: {resp.text}")
+            return None, f"HTTP {resp.status_code}"
+        data = resp.json()
+        if not data:
+            print(f"[Warning] Empty response from {url}")
+            return None, "Empty response"
+        return data, None
+    except requests.exceptions.RequestException as e:
+        print(f"[Exception] Connection error for {url}: {e}")
+        return None, str(e)
 
 
-def get_metadata_col(client: MongoClient, db_name: str, meta_col: str):
-    return client[db_name][meta_col]
+def extract_ip_lookup(ip_address, quick=False):
+    url = f"{BASE_URL_V3}/ip/{ip_address}"
+    params = {"quick": str(quick).lower()}
+    data, error = safe_api_get(url, params)
+    print(f"\nRaw IP Lookup Data for {ip_address}:\n{data if data else error}")
+    return data
 
 
-def get_saved_fetch_headers(meta_col, key: str) -> Dict[str, str]:
-    """Return conditional request headers based on last ETag / Last-Modified we saw."""
-    doc = meta_col.find_one({"_id": key}) or {}
-    headers = {}
-    etag = doc.get("etag")
-    last_modified = doc.get("last_modified")
-    if etag:
-        headers["If-None-Match"] = etag
-    if last_modified:
-        headers["If-Modified-Since"] = last_modified
-    return headers
+def extract_cve_info(cve_id):
+    url = f"{BASE_URL_V1}/cve/{cve_id}"
+    data, error = safe_api_get(url)
+    print(f"\nRaw CVE Data for {cve_id}:\n{data if data else error}")
+    return data
 
 
-def save_fetch_headers(meta_col, key: str, response: requests.Response) -> None:
-    """Persist ETag / Last-Modified for incremental pulls."""
-    etag = response.headers.get("ETag")
-    last_modified = response.headers.get("Last-Modified")
-    meta_col.update_one(
-        {"_id": key},
-        {"$set": {"etag": etag, "last_modified": last_modified, "updated_at": datetime.now(timezone.utc)}},
-        upsert=True,
-    )
+def extract_community_info(ip_address):
+    url = f"{BASE_URL_V3}/community/{ip_address}"
+    data, error = safe_api_get(url)
+    print(f"\nRaw Community Data for {ip_address}:\n{data if data else error}")
+    return data
 
 
-def fetch_drop_text(url: str, headers: Dict[str, str], timeout: float, verify_tls: bool) -> Optional[str]:
-    """GET the DROP list; return text or None if not modified."""
-    base_headers = {
-        "Accept": "text/plain",
-        "User-Agent": headers.pop("User-Agent", "SpamhausConnector/1.0"),
-    }
-    base_headers.update(headers)
-
-    resp = requests.get(url, headers=base_headers, timeout=timeout, verify=verify_tls)
-    if resp.status_code == 304:
-        logger.info("No changes since last fetch (HTTP 304 Not Modified).")
+def transform(data, endpoint_name):
+    if not data:
+        print(f"[Transform] No data to transform from {endpoint_name}")
         return None
-    resp.raise_for_status()
-    return resp.text, resp
+    transformed = {
+        "source": endpoint_name,
+        "data": data,
+        "ingested_at": datetime.datetime.utcnow()
+    }
+    print(f"\nTransformed Data for {endpoint_name}:\n{transformed}")
+    return transformed
 
 
-def parse_drop_lines(text: str, connector_name: str, source_url: str) -> List[Dict]:
-    """
-    Parse DROP lines.
-    Typical line: '1.2.3.0/24 ; some reason' or comments beginning with ';' or '#'
-    """
-    records = []
-    fetched_at = datetime.now(timezone.utc)
-    for raw in text.splitlines():
-        line = raw.strip()
-        if not line or line.startswith(";") or line.startswith("#"):
-            continue
-        cidr, note = (line.split(";", 1) + [""])[:2]
-        cidr = cidr.strip()
-        note = note.strip()
-        records.append(
-            {
-                "cidr": cidr,
-                "note": note if note else None,
-                "source": source_url,
-                "connector": connector_name,
-                "fetched_at": fetched_at,
-            }
-        )
-    return records
-
-
-def upsert_records(col, records: List[Dict], batch_size: int = 500) -> int:
-    """
-    Upsert by CIDR. Keep latest fetched_at and note.
-    """
-    if not records:
+def load_to_mongo(data, collection_name):
+    if not data:
+        print(f"[Load] No data to load into {collection_name}")
+        return 0
+    try:
+        collection = db[collection_name]
+        result = collection.insert_one(data)
+        print(f"[Load] Inserted document ID: {result.inserted_id} into {collection_name}")
+        return 1
+    except PyMongoError as e:
+        print(f"[Load Error] MongoDB insertion error for {collection_name}: {e}")
         return 0
 
-    total = 0
-    for i in range(0, len(records), batch_size):
-        chunk = records[i : i + batch_size]
-        ops = []
-        for r in chunk:
-            ops.append(
-                UpdateOne(
-                    {"cidr": r["cidr"]},
-                    {"$set": {
-                        "note": r["note"],
-                        "source": r["source"],
-                        "connector": r["connector"],
-                        "fetched_at": r["fetched_at"],
-                    }},
-                    upsert=True,
-                )
-            )
-        res = col.bulk_write(ops, ordered=False)
-        total += res.upserted_count + res.modified_count
-    return total
 
+def run_etl():
+    print("Starting GreyNoise ETL process...\n")
 
-def main() -> int:
-    cfg = load_settings()
-    url = cfg["BASE_URL"].rstrip("/") + "/" + cfg["ENDPOINT"].lstrip("/")
-    logger.info("Starting ETL for %s", cfg["CONNECTOR_NAME"])
-    logger.info("Fetching from: %s", url)
+    ip_address = "8.8.8.8"
+    cve_id = "CVE-2024-12345"
 
-    # --- Mongodb ---
-    try:
-        client = MongoClient(cfg["MONGO_URI"])
-        db = client[cfg["DB_NAME"]]
-        col = db[cfg["COLLECTION_NAME"]]
-        meta_col = get_metadata_col(client, cfg["DB_NAME"], cfg["METADATA_COLLECTION"])
-        # Helpful index
-        col.create_index("cidr", unique=True)
-    except PyMongoError as e:
-        logger.exception("MongoDB connection/index error: %s", e)
-        return 2
+    ip_data = extract_ip_lookup(ip_address)
+    cve_data = extract_cve_info(cve_id)
+    community_data = extract_community_info(ip_address)
 
-    # --- HTTP fetch with conditional headers ---
-    conditional = get_saved_fetch_headers(meta_col, key="spamhaus_drop")
-    # Ensureing that user agent is from config
-    conditional["User-Agent"] = cfg["USER_AGENT"]
+    transformed_ip = transform(ip_data, "ip_lookup")
+    transformed_cve = transform(cve_data, "cve_lookup")
+    transformed_community = transform(community_data, "community_lookup")
 
-    try:
-        result = fetch_drop_text(url, headers=conditional, timeout=cfg["REQUEST_TIMEOUT"], verify_tls=cfg["VERIFY_TLS"])
-        if result is None:
-            logger.info("Nothing to load. Exiting.")
-            return 0
-        text, resp = result
-    except requests.exceptions.HTTPError as e:
-        logger.exception("HTTP error: %s", e)
-        return 3
-    except requests.exceptions.RequestException as e:
-        logger.exception("Request failed: %s", e)
-        return 4
+    total_loaded = 0
+    total_loaded += load_to_mongo(transformed_ip, "greynoise_ip_lookup_raw")
+    total_loaded += load_to_mongo(transformed_cve, "greynoise_cve_lookup_raw")
+    total_loaded += load_to_mongo(transformed_community, "greynoise_community_lookup_raw")
 
-    # Saving the ETag/Last-Modified for next run
-    try:
-        save_fetch_headers(meta_col, key="spamhaus_drop", response=resp)
-    except PyMongoError as e:
-        logger.warning("Failed to save fetch headers to metadata: %s", e)
-
-    # --- Transforming the data ---
-    records = parse_drop_lines(text, cfg["CONNECTOR_NAME"], url)
-    logger.info("Parsed %d records.", len(records))
-
-    # --- Loading transformed data to the db ---
-    try:
-        upserted = upsert_records(col, records, batch_size=cfg["BATCH_SIZE"])
-        logger.info("Upserted/Modified %d records into %s.%s", upserted, cfg["DB_NAME"], cfg["COLLECTION_NAME"])
-    except PyMongoError as e:
-        logger.exception("MongoDB write error: %s", e)
-        return 5
-
-    logger.info("ETL completed successfully.")
-    return 0
+    print(f"\nTotal documents loaded into MongoDB: {total_loaded}")
+    print("\nETL process completed!\n")
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    run_etl()

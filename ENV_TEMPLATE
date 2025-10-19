@@ -1,11 +1,2 @@
-BASE_URL=your_base_url
-ENDPOINT=your_endpoint
-MONGO_URI=your_mongo_uri
-DB_NAME=your_database_name
-COLLECTION_NAME=your_collection_name
-CONNECTOR_NAME=your_connector_name
-REQUEST_TIMEOUT=your_request_timeout
-USER_AGENT=your_user_agent_string
-VERIFY_TLS=your_true_or_false
-BATCH_SIZE=your_batch_size
-METADATA_COLLECTION=your_metadata_collection_name
+GREYNOISE_API_KEY=your_api_key_here
+MONGO_URI=mongodb://localhost:27017

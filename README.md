@@ -1,48 +1,97 @@
-# Spamhaus DROP List ETL Connector
+# GreyNoise Custom ETL Connector
 
-## Introduction
-The **Spamhaus DROP List ETL Connector** is a Python-based tool that automates the process of fetching, parsing, and storing the Spamhaus DROP (Don't Route Or Peer) List into a MongoDB database.  
-The DROP List identifies IP address ranges controlled by cybercriminals and is widely used by network administrators and security teams to block malicious traffic.
+**Name:** Vidisha Desai
 
-The connector:
-- Retrieves the latest DROP list from Spamhaus.
-- Parses entries into structured fields (CIDR, SBL ID, and description).
-- Stores the processed data in MongoDB for integration into security workflows.
-- Maintains metadata for tracking updates and ETL run status.
+**Section**: CSE - C
+
+**Roll Number:** 3122225001154
+
+
+## Overview
+This Python ETL pipeline securely connects to the GreyNoise API and extracts malware and network threat intelligence from three critical endpoints:
+1. **IP Lookup** (`/v3/ip/{ip}`) — retrieves metadata, ASN, reverse DNS, actors, tags, and recent activity about a given IP address.
+2. **CVE Information** (`/v1/cve/{cve_id}`) — fetches detailed information about specific Common Vulnerabilities and Exposures (CVEs).
+3. **Community IP Lookup** (`/v3/community/{ip}`) — returns community-level insight on IP addresses from GreyNoise’s freely accessible dataset.
+
+The pipeline follows a standard **Extract → Transform → Load** pattern, loading data into **MongoDB collections** with **timestamps** for auditing. Each endpoint’s data is stored in its dedicated MongoDB collection to maintain data organization and clarity.
+
+---
 
 ## Features
-- **Automated Fetching:** Downloads the latest DROP list from the Spamhaus endpoint.
-- **Data Parsing:** Extracts CIDR blocks, SBL IDs, and associated comments.
-- **MongoDB Storage:** Saves raw and processed data for easy querying.
-- **Metadata Management:** Tracks update timestamps, record counts, and source info.
-- **Configurable:** All runtime settings are managed through environment variables.
+- Secure API authentication using environment variables
+- Robust error handling for connection failures, rate limits, invalid responses, and empty results
+- Separate MongoDB collections for each endpoint’s raw data storage
+- Detailed logging of raw data, transformed data, and insertion results for traceability
+- Easy extendability for adding new endpoints or integrations
 
-
+---
 
 ## Prerequisites
-Before running the connector, ensure you have:
-- **Python 3.8+**
-- **MongoDB** installed locally or remotely accessible
-- Internet access to fetch the Spamhaus DROP List
+
+- Python 3.7 or above
+- MongoDB instance (local or cloud)
+- GreyNoise API key with v1 and v3 access
+
+---
+
+## Installation
+
+1. Clone this repository and navigate to your branch.
+2. Create a `.env` file in the root directory and add:
+`GREYNOISE_API_KEY=your_actual_api_key`
+`MONGO_URI=mongodb://localhost:27017/`
+3. Install dependencies: `pip install -r requirements.txt`
+
+---
+
+## Usage
+
+Run the ETL pipeline: `python etl_connector.py`
+
+
+The script will:
+- Extract data from the three GreyNoise endpoints (IP Lookup, CVE, Community)
+- Transform the data into a uniform JSON structure with ingestion timestamps
+- Load each dataset into separate MongoDB collections:
+  - `greynoise_ip_lookup_raw`
+  - `greynoise_cve_lookup_raw`
+  - `greynoise_community_lookup_raw`
+
+---
+
+## MongoDB Document Structure
+
+Each document inserted into MongoDB will have this format:
+
+{
+"source": "ip_lookup", // Endpoint name
+
+"data": { ... }, // Raw JSON data from API
+
+"ingested_at": "2025-10-19T18:00:00Z" // UTC timestamp of ingestion
+}
+
+
+This structure supports audits, data updates, and querying by source.
+
+---
+
+## Error Handling & Validation
+
+- Detects HTTP errors and prints meaningful messages including rate-limit errors (HTTP 429)
+- Warns on empty payloads or partial data responses
+- Handles network/connectivity exceptions gracefully
+- Skips loading data into MongoDB if data is invalid or missing
+- Logs inserted document IDs and total number of successful inserts for verification
+
+---
 
 
 
 
-## Configuration
-The connector reads settings from environment variables.
-You must create a .env file based on the ENV_TEMPLATE provided.
 
-BASE_URL=your_base_url
-ENDPOINT=your_endpoint
-MONGO_URI=your_mongo_uri
-DB_NAME=your_database_name
-COLLECTION_NAME=your_collection_name
-CONNECTOR_NAME=your_connector_name
-REQUEST_TIMEOUT=your_request_timeout
-USER_AGENT=your_user_agent_string
-VERIFY_TLS=your_true_or_false
-BATCH_SIZE=your_batch_size
-METADATA_COLLECTION=your_metadata_collection_name
 
-## Run the Connector
-`python etl_connector.py`
+
+
+
+
