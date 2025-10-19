@@ -135,15 +135,15 @@ When fetched, the endpoint returns rules for a specific language or quality prof
 
 ## 📂 Project Structure
 
-custom-python-etl-data-connector-Athish369/
-│
-├── etl_connector1.py # ETL script for first endpoint: Extract, Transform, Load
-├── etl_connector2.py # ETL script for second endpoint: Extract, Transform, Load
-├── etl_connector3.py # ETL script for third endpoint: Extract, Transform, Load
-├── requirements.txt # Python dependencies list
-├── .env # Environment variables (not tracked in git)
-├── .gitignore # Git ignore rules
-├── README.md # Project documentation
+    custom-python-etl-data-connector-Athish369/
+    │
+    ├── etl_connector1.py # ETL script for first endpoint: Extract, Transform, Load
+    ├── etl_connector2.py # ETL script for second endpoint: Extract, Transform, Load
+    ├── etl_connector3.py # ETL script for third endpoint: Extract, Transform, Load
+    ├── requirements.txt # Python dependencies list
+    ├── .env # Environment variables (not tracked in git)
+    ├── .gitignore # Git ignore rules
+    ├── README.md # Project documentation
 
 ---
 
