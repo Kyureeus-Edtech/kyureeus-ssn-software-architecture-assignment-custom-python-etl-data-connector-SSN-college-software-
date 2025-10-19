@@ -1,135 +1,286 @@
-# SSN-college-software-architecture-Assignments-
-Assignment repository for building custom Python ETL data connectors (Kyureeus EdTech, SSN CSE). Students: Submit your ETL scripts here. Make sure your commit message includes your name and roll number.
-# Software Architecture Assignment: Custom Python ETL Data Connector
+# SonarQube ETL Data Connector
 
-Welcome to the official repository for submitting your Software Architecture assignment on building custom data connectors (ETL pipelines) in Python. This assignment is part of the Kyureeus EdTech program for SSN CSE students.
-
----
-Guideline: Building and Managing Custom Data Connectors (ETL Pipeline) in Python
-
-1. Setting Up the Connector Environment
-a. Choose Your API Provider: Identify a data provider and understand its Base URL, Endpoints, and Authentication.
-b. Understand the API Documentation: Focus on headers, query params, pagination, rate limits, and response structure.
-
-
-2. Secure API Authentication Using Environment Variables
-a. Create a `.env` File Locally: Store API keys and secrets as KEY=VALUE pairs.
-b. Load Environment Variables in Code: Use libraries like `dotenv` to securely load environment variables.
-
-
-3. Design the ETL Pipeline
-Extract: Connect to the API, pass tokens/headers, and collect JSON data.
-Transform: Clean or reformat the data for MongoDB compatibility.
-Load: Store the transformed data into a MongoDB collection.
-
-
-4. MongoDB Collection Strategy
-Use one collection per connector, e.g., `connector_name_raw`.
-Store ingestion timestamps to support audits or updates.
-
-
-5. Iterative Testing & Validation
-Test for invalid responses, empty payloads, rate limits, and connectivity errors.
-Ensure consistent insertion into MongoDB.
-
-
-6. Git and Project Structure Guidelines
-a. Use a Central Git Repository: Clone the shared repo and create a new branch for your connector.
-b. Ignore Secrets: Add `.env` to `.gitignore` before the first commit.
-c. Push and Document: Write README.md with endpoint details, API usage, and example output.
-
-
-Final Checklist for Students
-Understand API documentation
-Secure credentials in `.env`
-Build complete ETL script
-Validate MongoDB inserts
-Push code to your branch
-Include descriptive README
-Submit Pull Request
-
-## 📋 Assignment Overview
-
-**Goal:**  
-Develop a Python script to connect with an API provider, extract data, transform it for compatibility, and load it into a MongoDB collection. Follow secure coding and project structure practices as outlined below.
+This project is a custom **Extract–Transform–Load (ETL)** Python script that connects to a local **SonarQube server**, extracts data from its public REST APIs (metrics, quality profiles, and rules), transforms it into a clean JSON format, and stores it into MongoDB collections for analysis and reporting.
 
 ---
 
-## ✅ Submission Checklist
+## ⚙️ Prerequisites
 
-- [ ] Choose a data provider (API) and understand its documentation
-- [ ] Secure all API credentials using a `.env` file
-- [ ] Build a complete ETL pipeline: Extract → Transform → Load (into MongoDB)
-- [ ] Test and validate your pipeline (handle errors, invalid data, rate limits, etc.)
-- [ ] Follow the provided Git project structure
-- [ ] Write a clear and descriptive `README.md` in your folder with API details and usage instructions
-- [ ] **Include your name and roll number in your commit messages**
-- [ ] Push your code to your branch and submit a Pull Request
+- **Python** 3.9 or newer
+- **MongoDB** installed and running locally or accessible remotely
+- `pip` for installing dependencies
 
 ---
 
-## 📦 Project Structure
-
-/your-branch-name/
-├── etl_connector.py
-├── .env
-├── requirements.txt
-├── README.md
-└── (any additional scripts or configs)
-
-
-- **`.env`**: Store sensitive credentials; do **not** commit this file.
-- **`etl_connector.py`**: Your main ETL script.
-- **`requirements.txt`**: List all Python dependencies.
-- **`README.md`**: Instructions for your connector.
+## 📌 Features
+- **Extracts** the latest data from SonarQube API endpoints (`/api/metrics/search`, `/api/qualityprofiles/search`, `/api/rules/search`)
+- **Transforms** the data by:
+  - Flattening nested JSON structures (e.g., metrics inside profiles)
+  - Cleaning and normalizing field names for MongoDB
+  - Handling missing or null values
+- **Loads** each record into MongoDB as a structured document with relevant fields (`id`, `key`, `name`, `type`, `description`, `domain`, `direction`, `qualitative`, etc.)
+- Supports configuration via environment variables for API credentials, endpoints, and MongoDB connection
 
 ---
 
-## 🛡️ Secure Authentication
+## 🔌 Data Source / API
 
-- Store all API keys/secrets in a local `.env` file.
-- Load credentials using the `dotenv` Python library.
-- Add `.env` to `.gitignore` before committing.
+**Base URL:**  
+`http://localhost:9000`
+
+**Endpoint 1:**  
+`/api/metrics/search`
+
+When fetched, the endpoint returns JSON containing metrics. Each metric can be stored as a separate record in MongoDB.
+
+**Example JSON row:**
+{
+    "metrics": [
+        {
+            "id": "c707e4e5-7054-4a66-a982-d79d463c6842",
+            "key": "accepted_issues",
+            "type": "INT",
+            "name": "Accepted Issues",
+            "description": "Accepted issues",
+            "domain": "Issues",
+            "direction": -1,
+            "qualitative": false,
+            "hidden": false
+        }, ... ] }
+
+**Endpoint 2:**  
+`/api/qualityprofiles/search`
+
+When fetched, the endpoint returns quality profile information for projects. Each profile can be stored as a separate document in MongoDB..
+
+**Example JSON row:**
+{
+    "profiles": [
+        {
+            "key": "####",
+            "name": "Sonar way",
+            "language": "azureresourcemanager",
+            "languageName": "Azure Resource Manager",
+            "isInherited": false,
+            "isDefault": true,
+            "activeRuleCount": 31,
+            "activeDeprecatedRuleCount": 0,
+            "rulesUpdatedAt": "2025-10-19T08:56:36+0000",
+            "isBuiltIn": true,
+            "actions": {
+                "edit": false,
+                "setAsDefault": false,
+                "copy": true,
+                "associateProjects": false,
+                "delete": false
+            }
+        }, ... ]}
+
+**Endpoint 3:**  
+`/api/rules/search`
+
+When fetched, the endpoint returns rules for a specific language or quality profile. Can store each rule as a separate MongoDB document.
+
+**Example JSON row:**
+{
+    "total": 4061,
+    "p": 1,
+    "ps": 100,
+    "rules": [
+    {
+            "key": "php:S1131",
+            "repo": "php",
+            "name": "Lines should not end with trailing whitespaces",
+            "createdAt": "2025-10-19T14:25:57+0530",
+            "severity": "MINOR",
+            "status": "READY",
+            "isTemplate": false,
+            "tags": [],
+            "sysTags": [
+                "convention",
+                "psr2"
+            ],
+            "lang": "php",
+            "langName": "PHP",
+            "params": [],
+            "defaultDebtRemFnType": "CONSTANT_ISSUE",
+            "debtRemFnType": "CONSTANT_ISSUE",
+            "type": "CODE_SMELL",
+            "defaultRemFnType": "CONSTANT_ISSUE",
+            "defaultRemFnBaseEffort": "1min",
+            "remFnType": "CONSTANT_ISSUE",
+            "remFnBaseEffort": "1min",
+            "remFnOverloaded": false,
+            "scope": "MAIN",
+            "isExternal": false,
+            "descriptionSections": [
+                {
+                    "key": "root_cause",
+                    "content": "Trailing whitespaces bring no information, they may generate noise when comparing different versions of the same file, and they can create bugs when they appear after a marking a line continuation. They should be systematically removed.An automated code formatter allows to completely avoid this family of issues and should be used wherever possible.Exceptions:Lines containing only whitespaces."
+                }
+            ],
+            "educationPrinciples": [],
+            "updatedAt": "2025-10-19T14:25:57+0530",
+            "cleanCodeAttribute": "FORMATTED",
+            "cleanCodeAttributeCategory": "CONSISTENT",
+            "impacts": [
+                {
+                    "softwareQuality": "MAINTAINABILITY",
+                    "severity": "LOW"
+                }
+            ]
+        }, ...] }
 
 ---
 
-## 🗃️ MongoDB Guidelines
+## 📂 Project Structure
 
-- Use one MongoDB collection per connector (e.g., `connectorname_raw`).
-- Store ingestion timestamps for audit and update purposes.
-
----
-
-## 🧪 Testing & Validation
-
-- Check for invalid responses, empty payloads, rate limits, and connectivity issues.
-- Ensure data is correctly inserted into MongoDB.
-
----
-
-## 📝 Git & Submission Guidelines
-
-1. **Clone the repository** and create your own branch.
-2. **Add your code and documentation** in your folder/branch.
-3. **Do not commit** your `.env` or secrets.
-4. **Write clear commit messages** (include your name and roll number).
-5. **Submit a Pull Request** when done.
+    custom-python-etl-data-connector-Athish369/
+    │
+    ├── etl_connector1.py # ETL script for first endpoint: Extract, Transform, Load
+    ├── etl_connector2.py # ETL script for second endpoint: Extract, Transform, Load
+    ├── etl_connector3.py # ETL script for third endpoint: Extract, Transform, Load
+    ├── requirements.txt # Python dependencies list
+    ├── .env # Environment variables (not tracked in git)
+    ├── .gitignore # Git ignore rules
+    ├── README.md # Project documentation
 
 ---
 
-## 💡 Additional Resources
+## ▶️ Usage
 
-- [python-dotenv Documentation](https://saurabh-kumar.com/python-dotenv/)
-- [MongoDB Python Driver (PyMongo)](https://pymongo.readthedocs.io/en/stable/)
-- [API Documentation Example](https://restfulapi.net/)
+Run the ETL pipeline:
+    python etl_connector1.py
+![OUTPUT after running etl_connector1.py](images/SQ_etl1.png)
+
+    python etl_connector2.py
+![OUTPUT after running etl_connector2.py](images/SQ_etl2.png)
+    
+    python etl_connector3.py
+![OUTPUT after running etl_connector3.py](images/SQ_etl3.png)
+
+
+
+**Process Flow:**
+1. **Fetch** data from `BASEURL + API_ENDPOINT`
+2. **Parse & clean** Nested JSON to structured records
+3. **Insert** cleaned records into MongoDB
 
 ---
 
-## 📢 Need Help?
+## 📂 MongoDB Output Format
 
-- Post your queries in the [KYUREEUS/SSN College - WhatsApp group](#) .
-- Discuss issues, share progress, and help each other.
+Documents in MongoDB will look like:
+**Endpoint 1:**  
+`/api/metrics/search`
+{
+  "_id": {
+    "$oid": "68f4b13a204bbc8a056b053f"
+  },
+  "id": "c707e4e5-7054-4a66-a982-d79d463c6842",
+  "key": "accepted_issues",
+  "type": "INT",
+  "name": "Accepted Issues",
+  "description": "Accepted issues",
+  "domain": "Issues",
+  "direction": -1,
+  "qualitative": false,
+  "hidden": false,
+  "parent_id": null
+}
+
+![Sonarqube metrics in MongoDB](images/SQ_Metrics_Mongo.png)
+
+**Endpoint 2:**  
+`/api/qualityprofiles/search`
+{
+  "_id": {
+    "$oid": "68f4b27678e4182e9dd58f84"
+  },
+  "key": "871e3a25-3bb9-49c0-8004-255f2c874caf",
+  "name": "Sonar way",
+  "language": "azureresourcemanager",
+  "languageName": "Azure Resource Manager",
+  "isInherited": false,
+  "isDefault": true,
+  "activeRuleCount": 31,
+  "activeDeprecatedRuleCount": 0,
+  "rulesUpdatedAt": "2025-10-19T08:56:36+0000",
+  "isBuiltIn": true,
+  "actions": {
+    "edit": false,
+    "setAsDefault": false,
+    "copy": true,
+    "associateProjects": false,
+    "delete": false
+  }
+}
+
+![Sonarqube quality profiles in MongoDB](images/SQ_QualityProfiles_Mongo.png)
+
+**Endpoint 3:**  
+`/api/rules/search`
+{
+  "_id": {
+    "$oid": "68f4b3e7eedbc0a537f3f414"
+  },
+  "key": "php:S1131",
+  "repo": "php",
+  "name": "Lines should not end with trailing whitespaces",
+  "createdAt": "2025-10-19T14:25:57+0530",
+  "severity": "MINOR",
+  "status": "READY",
+  "isTemplate": false,
+  "tags": [],
+  "sysTags": [
+    "convention",
+    "psr2"
+  ],
+  "lang": "php",
+  "langName": "PHP",
+  "params": [],
+  "defaultDebtRemFnType": "CONSTANT_ISSUE",
+  "debtRemFnType": "CONSTANT_ISSUE",
+  "type": "CODE_SMELL",
+  "defaultRemFnType": "CONSTANT_ISSUE",
+  "defaultRemFnBaseEffort": "1min",
+  "remFnType": "CONSTANT_ISSUE",
+  "remFnBaseEffort": "1min",
+  "remFnOverloaded": false,
+  "scope": "MAIN",
+  "isExternal": false,
+  "descriptionSections": [
+    {
+      "key": "root_cause",
+      "content": "Trailing whitespaces bring no information, they may generate noise when comparing different versions of the same file, and they can create bugs when they appear after a marking a line continuation. They should be systematically removed.An automated code formatter allows to completely avoid this family of issues and should be used wherever possible.Exceptions:Lines containing only whitespaces."
+    }
+  ],
+  "educationPrinciples": [],
+  "updatedAt": "2025-10-19T14:25:57+0530",
+  "cleanCodeAttribute": "FORMATTED",
+  "cleanCodeAttributeCategory": "CONSISTENT",
+  "impacts": [
+    {
+      "softwareQuality": "MAINTAINABILITY",
+      "severity": "LOW"
+    }
+  ]
+}
+
+![Sonarqube rules in MongoDB](images/SQ_Rules_Mongo.png)
 
 ---
 
-Happy coding! 🚀
+## Limitations
+
+**Paginated Endpoints:**
+
+`/api/rules/search` is paginated. The current ETL fetches only a single page by default. To retrieve all rules, the ETL should loop through all pages using p (page number) and ps (page size).
+
+**Authentication Required:**
+
+Accessing SonarQube APIs requires valid credentials. The ETL uses HTTP Basic Auth. Ensure .env contains SONARQUBE_USERNAME and SONARQUBE_PASSWORD.
+
+**Local SonarQube Only:**
+
+The ETL is currently designed for a local or accessible SonarQube server. Remote deployments may require network adjustments.
