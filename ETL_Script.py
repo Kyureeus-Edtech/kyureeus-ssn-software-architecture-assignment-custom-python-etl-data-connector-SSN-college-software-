@@ -9,41 +9,40 @@ load_dotenv()
 
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
 DB_NAME = os.getenv("DB_NAME", "mitre_attack")
-COLLECTION_NAME = os.getenv("COLLECTION_NAME", "techniques")
-MITRE_JSON_URL = os.getenv(
-    "MITRE_JSON_URL",
-    "https://raw.githubusercontent.com/mitre-attack/attack-stix-data/master/enterprise-attack/enterprise-attack.json"
-)
+
+# MITRE JSON endpoints for all 3 domains
+MITRE_ENDPOINTS = {
+    "enterprise-attack": "https://raw.githubusercontent.com/mitre-attack/attack-stix-data/master/enterprise-attack/enterprise-attack.json",
+    "mobile-attack": "https://raw.githubusercontent.com/mitre-attack/attack-stix-data/master/mobile-attack/mobile-attack.json",
+    "ics-attack": "https://raw.githubusercontent.com/mitre-attack/attack-stix-data/master/ics-attack/ics-attack.json"
+}
 
 # ------------------ MongoDB Connection ------------------
 client = pymongo.MongoClient(MONGO_URI)
 db = client[DB_NAME]
-collection = db[COLLECTION_NAME]
 
 print("\n[CONFIG] MongoDB connected.")
-print(f"[CONFIG] Database: {DB_NAME}, Collection: {COLLECTION_NAME}")
+print(f"[CONFIG] Database: {DB_NAME}")
+print("=" * 60)
 
-# ------------------ Extract ------------------
-print("\n=== EXTRACT PHASE ===")
-print(f"Downloading MITRE ATT&CK data from {MITRE_JSON_URL} ...")
-response = requests.get(MITRE_JSON_URL)
 
-if response.status_code != 200:
-    raise Exception(f"Failed to fetch data. Status Code: {response.status_code}")
+# ------------------ Function Definitions ------------------
+def extract_data(url):
+    """Extract raw data from a given MITRE ATT&CK endpoint."""
+    print(f"\n=== EXTRACT PHASE for {url} ===")
+    print(f"Downloading MITRE ATT&CK data from: {url}")
+    response = requests.get(url)
 
-data = response.json()
-print(f"Downloaded {len(data['objects'])} STIX objects.")
+    if response.status_code != 200:
+        raise Exception(f"[ERROR] Failed to fetch data from {url}. Status Code: {response.status_code}")
 
-# Show sample raw data
-sample_raw = next((obj for obj in data['objects'] if obj['type'] == 'attack-pattern'), None)
-print("\n[BEFORE TRANSFORMATION] Sample record:")
-print(json.dumps(sample_raw, indent=2)[:500] + "\n...")
+    data = response.json()
+    print(f"[INFO] Downloaded {len(data['objects'])} STIX objects successfully.")
+    return data
 
-# ------------------ Transform ------------------
-print("\n=== TRANSFORM PHASE ===")
 
 def transform_record(record):
-    """Convert STIX attack-pattern to a cleaner MongoDB-friendly structure."""
+    """Transform a STIX attack-pattern record into a simpler MongoDB structure."""
     return {
         "id": record.get("id"),
         "name": record.get("name"),
@@ -61,21 +60,54 @@ def transform_record(record):
         ]
     }
 
-transformed_data = [
-    transform_record(obj) for obj in data['objects'] if obj['type'] == 'attack-pattern'
-]
 
-# Show transformed sample
-print("\n[AFTER TRANSFORMATION] Sample record:")
-print(json.dumps(transformed_data[0], indent=2))
+def transform_data(data):
+    """Filter and transform all 'attack-pattern' objects."""
+    print("\n=== TRANSFORM PHASE ===")
+    transformed = [transform_record(obj) for obj in data['objects'] if obj['type'] == 'attack-pattern']
+    print(f"[INFO] Transformed {len(transformed)} 'attack-pattern' records.")
+    return transformed
 
-# ------------------ Load ------------------
-print("\n=== LOAD PHASE ===")
-if transformed_data:
-    collection.delete_many({})  # Clear old data
-    collection.insert_many(transformed_data)
-    print(f"Inserted {len(transformed_data)} transformed records into MongoDB.")
-else:
-    print("No transformed data to insert.")
 
-print("\n✅ ETL Pipeline completed successfully!")
+def load_data(collection_name, transformed_data):
+    """Load transformed data into MongoDB."""
+    print(f"\n=== LOAD PHASE for Collection: {collection_name} ===")
+    collection = db[collection_name]
+    if transformed_data:
+        collection.delete_many({})  # clear old data
+        collection.insert_many(transformed_data)
+        print(f"[SUCCESS] Inserted {len(transformed_data)} records into collection '{collection_name}'.")
+    else:
+        print(f"[WARNING] No transformed data available for '{collection_name}'.")
+
+
+# ------------------ Main ETL Flow ------------------
+print("\n🚀 Starting multi-endpoint MITRE ATT&CK ETL Pipeline...\n")
+
+for domain, url in MITRE_ENDPOINTS.items():
+    print("=" * 60)
+    print(f"\n📂 Processing Domain: {domain.upper()}")
+    print("=" * 60)
+
+    # 1️⃣ Extract
+    data = extract_data(url)
+
+    # Show a raw sample
+    sample_raw = next((obj for obj in data['objects'] if obj['type'] == 'attack-pattern'), None)
+    if sample_raw:
+        print("\n[BEFORE TRANSFORMATION] Sample Record:")
+        print(json.dumps(sample_raw, indent=2)[:500] + "\n...")
+
+    # 2️⃣ Transform
+    transformed_data = transform_data(data)
+
+    # Show a transformed sample
+    if transformed_data:
+        print("\n[AFTER TRANSFORMATION] Sample Record:")
+        print(json.dumps(transformed_data[0], indent=2))
+
+    # 3️⃣ Load
+    load_data(domain.replace("-", "_"), transformed_data)
+
+print("\n✅ ETL Pipeline for all MITRE endpoints completed successfully!")
+print("=" * 60)
