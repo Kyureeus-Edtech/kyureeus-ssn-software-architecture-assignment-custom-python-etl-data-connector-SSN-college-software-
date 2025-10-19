@@ -1,0 +1,17 @@
+# --- NVD API ---
+NVD_CVE_URL=https://services.nvd.nist.gov/rest/json/cves/2.0
+NVD_CPE_URL=https://services.nvd.nist.gov/rest/json/cpes/2.0
+NVD_CVEHISTORY_URL=https://services.nvd.nist.gov/rest/json/cvehistory/2.0
+NVD_API_KEY=  # Optional, can be blank
+
+# --- MongoDB ---
+MONGO_URI=mongodb://localhost:27017
+MONGO_DB=security_feeds
+MONGO_CVE_COLLECTION=nvd_cves_raw
+MONGO_CPE_COLLECTION=nvd_cpes_raw
+MONGO_CVEHISTORY_COLLECTION=nvd_cvehistory_raw
+
+# --- ETL Config ---
+RESULTS_PER_PAGE=200
+MAX_RETRIES=3
+RETRY_SLEEP_SECONDS=3
