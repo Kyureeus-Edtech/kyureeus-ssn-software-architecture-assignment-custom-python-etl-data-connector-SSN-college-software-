@@ -1,0 +1,14 @@
+# Copy this file to .env and update with your actual values
+
+# MongoDB Configuration
+MONGODB_URI=mongodb://localhost:27017/
+MONGODB_DATABASE=cloudflare_etl_db
+
+# Cloudflare API Configuration 
+CLOUDFLARE_API_TOKEN=your_api_token_here
+CLOUDFLARE_ZONE_ID=your_zone_id_here
+CLOUDFLARE_EMAIL=your_email_here
+
+# Collection Name
+COLLECTION_NAME=cloudflare_trace_raw
+
