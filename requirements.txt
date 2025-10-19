@@ -1,0 +1,7 @@
+requests>=2.31.0
+pymongo>=4.4.0
+python-dotenv>=1.0.1
+pandas>=2.2.2
+stix2>=1.7.0
+taxii2-client>=2.3.0
+psycopg2-binary>=2.9.9

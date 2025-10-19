@@ -1,135 +1,138 @@
-# SSN-college-software-architecture-Assignments-
-Assignment repository for building custom Python ETL data connectors (Kyureeus EdTech, SSN CSE). Students: Submit your ETL scripts here. Make sure your commit message includes your name and roll number.
-# Software Architecture Assignment: Custom Python ETL Data Connector
+# MITRE Multi-Endpoint ETL
 
-Welcome to the official repository for submitting your Software Architecture assignment on building custom data connectors (ETL pipelines) in Python. This assignment is part of the Kyureeus EdTech program for SSN CSE students.
+## Task Description
 
----
-Guideline: Building and Managing Custom Data Connectors (ETL Pipeline) in Python
-
-1. Setting Up the Connector Environment
-a. Choose Your API Provider: Identify a data provider and understand its Base URL, Endpoints, and Authentication.
-b. Understand the API Documentation: Focus on headers, query params, pagination, rate limits, and response structure.
-
-
-2. Secure API Authentication Using Environment Variables
-a. Create a `.env` File Locally: Store API keys and secrets as KEY=VALUE pairs.
-b. Load Environment Variables in Code: Use libraries like `dotenv` to securely load environment variables.
-
-
-3. Design the ETL Pipeline
-Extract: Connect to the API, pass tokens/headers, and collect JSON data.
-Transform: Clean or reformat the data for MongoDB compatibility.
-Load: Store the transformed data into a MongoDB collection.
-
-
-4. MongoDB Collection Strategy
-Use one collection per connector, e.g., `connector_name_raw`.
-Store ingestion timestamps to support audits or updates.
-
-
-5. Iterative Testing & Validation
-Test for invalid responses, empty payloads, rate limits, and connectivity errors.
-Ensure consistent insertion into MongoDB.
-
-
-6. Git and Project Structure Guidelines
-a. Use a Central Git Repository: Clone the shared repo and create a new branch for your connector.
-b. Ignore Secrets: Add `.env` to `.gitignore` before the first commit.
-c. Push and Document: Write README.md with endpoint details, API usage, and example output.
-
-
-Final Checklist for Students
-Understand API documentation
-Secure credentials in `.env`
-Build complete ETL script
-Validate MongoDB inserts
-Push code to your branch
-Include descriptive README
-Submit Pull Request
-
-## 📋 Assignment Overview
-
-**Goal:**  
-Develop a Python script to connect with an API provider, extract data, transform it for compatibility, and load it into a MongoDB collection. Follow secure coding and project structure practices as outlined below.
+The objective of this task is to design and implement a Python-based ETL (Extract, Transform, Load) pipeline that collects, transforms, and stores structured threat intelligence data from **three different MITRE ATT&CK endpoints** — **Enterprise**, **Mobile**, and **ICS**.
+Each endpoint provides STIX-formatted data describing adversarial techniques, tactics, malware, and mitigations.
+The ETL process standardizes this data into a MongoDB-compatible structure, making it easier to query, analyze, and integrate into security tools.
 
 ---
 
-## ✅ Submission Checklist
+## Detailed Explanation of the Task Performed
 
-- [ ] Choose a data provider (API) and understand its documentation
-- [ ] Secure all API credentials using a `.env` file
-- [ ] Build a complete ETL pipeline: Extract → Transform → Load (into MongoDB)
-- [ ] Test and validate your pipeline (handle errors, invalid data, rate limits, etc.)
-- [ ] Follow the provided Git project structure
-- [ ] Write a clear and descriptive `README.md` in your folder with API details and usage instructions
-- [ ] **Include your name and roll number in your commit messages**
-- [ ] Push your code to your branch and submit a Pull Request
+### 1. Extraction
 
----
+* The script fetches STIX JSON data directly from the **MITRE ATT&CK public GitHub repository**, which mirrors data from the TAXII server.
+* Three distinct endpoints are used for different ATT&CK domains:
 
-## 📦 Project Structure
-
-/your-branch-name/
-├── etl_connector.py
-├── .env
-├── requirements.txt
-├── README.md
-└── (any additional scripts or configs)
-
-
-- **`.env`**: Store sensitive credentials; do **not** commit this file.
-- **`etl_connector.py`**: Your main ETL script.
-- **`requirements.txt`**: List all Python dependencies.
-- **`README.md`**: Instructions for your connector.
+  * **Enterprise ATT&CK:**
+    `https://raw.githubusercontent.com/mitre-attack/attack-stix-data/master/enterprise-attack/enterprise-attack.json`
+  * **Mobile ATT&CK:**
+    `https://raw.githubusercontent.com/mitre-attack/attack-stix-data/master/mobile-attack/mobile-attack.json`
+  * **ICS ATT&CK:**
+    `https://raw.githubusercontent.com/mitre-attack/attack-stix-data/master/ics-attack/ics-attack.json`
+* Each endpoint is downloaded independently, and the number of STIX objects retrieved is logged.
+* Clear console logs indicate which domain is being processed and confirm successful data extraction.
 
 ---
 
-## 🛡️ Secure Authentication
+### 2. Transformation
 
-- Store all API keys/secrets in a local `.env` file.
-- Load credentials using the `dotenv` Python library.
-- Add `.env` to `.gitignore` before committing.
+* The STIX data retrieved contains deeply nested and metadata-heavy structures unsuitable for direct MongoDB insertion.
+* The transformation step cleans and flattens this data by:
+
+  * Extracting only **attack-pattern** records.
+  * Keeping key attributes such as:
+
+    * `id`, `name`, `description`, `created`, `modified`
+    * `kill_chain_phases` (as a list)
+    * `external_references` (as simplified sub-documents)
+  * Removing redundant fields and metadata irrelevant for query analysis.
+* Each transformation is logged with before-and-after samples for validation.
+* The transformed records are compact, uniform, and optimized for fast MongoDB queries.
+
+**Before Transformation (Raw STIX snippet)**:
+
+```json
+{
+  "type": "attack-pattern",
+  "id": "attack-pattern--b17a1a56-e99c-403c-8948-561df0cffe81",
+  "name": "Phishing",
+  "description": "Adversaries send deceptive emails...",
+  "kill_chain_phases": [
+    {"kill_chain_name": "mitre-attack", "phase_name": "initial-access"}
+  ],
+  "external_references": [
+    {"source_name": "mitre-attack", "url": "https://attack.mitre.org/techniques/T1566/"}
+  ]
+}
+```
+
+**After Transformation (MongoDB-ready format)**:
+
+```json
+{
+  "id": "attack-pattern--b17a1a56-e99c-403c-8948-561df0cffe81",
+  "name": "Phishing",
+  "description": "Adversaries send deceptive emails...",
+  "created": "2017-05-31T21:30:00.000Z",
+  "modified": "2023-05-05T20:34:00.000Z",
+  "kill_chain_phases": ["initial-access"],
+  "external_references": [
+    {"source_name": "mitre-attack", "url": "https://attack.mitre.org/techniques/T1566/"}
+  ]
+}
+```
 
 ---
 
-## 🗃️ MongoDB Guidelines
+### 3. Loading
 
-- Use one MongoDB collection per connector (e.g., `connectorname_raw`).
-- Store ingestion timestamps for audit and update purposes.
+* Using **`pymongo`**, the script connects to a MongoDB instance (local or remote, as defined in `.env`).
+* Each domain’s data is loaded into its **own MongoDB collection**:
 
----
-
-## 🧪 Testing & Validation
-
-- Check for invalid responses, empty payloads, rate limits, and connectivity issues.
-- Ensure data is correctly inserted into MongoDB.
-
----
-
-## 📝 Git & Submission Guidelines
-
-1. **Clone the repository** and create your own branch.
-2. **Add your code and documentation** in your folder/branch.
-3. **Do not commit** your `.env` or secrets.
-4. **Write clear commit messages** (include your name and roll number).
-5. **Submit a Pull Request** when done.
+  * `enterprise_attack`
+  * `mobile_attack`
+  * `ics_attack`
+* Before inserting, the script clears the existing collection to avoid duplication.
+* The number of records inserted per domain is logged in the terminal for transparency.
+<img width="1375" height="582" alt="image" src="https://github.com/user-attachments/assets/858b7983-c373-4583-8c97-ef806c385165" />
 
 ---
 
-## 💡 Additional Resources
+### 4. Environment Configuration
 
-- [python-dotenv Documentation](https://saurabh-kumar.com/python-dotenv/)
-- [MongoDB Python Driver (PyMongo)](https://pymongo.readthedocs.io/en/stable/)
-- [API Documentation Example](https://restfulapi.net/)
+All configurable values are stored in a `.env` file for flexibility and security.
 
----
+**Example `.env` file:**
 
-## 📢 Need Help?
-
-- Post your queries in the [KYUREEUS/SSN College - WhatsApp group](#) .
-- Discuss issues, share progress, and help each other.
+```
+MONGO_URI="Your mongo URI"
+DB_NAME="Your database name"
+```
 
 ---
 
-Happy coding! 🚀
+### 5. Logging and Flow Control
+
+Each major ETL stage (Extract → Transform → Load) prints detailed logs in the terminal:
+
+* Endpoint being processed.
+* Total records extracted and transformed.
+* Sample data previews before and after transformation.
+* Confirmation messages for database insertions.
+
+This ensures full visibility of data flow and helps in debugging or extending the ETL logic.
+
+<img width="1409" height="479" alt="image" src="https://github.com/user-attachments/assets/d20569ab-3d9f-429e-8cec-7685193da474" />
+
+---
+<img width="1599" height="480" alt="image" src="https://github.com/user-attachments/assets/8a54e729-5c19-477d-bc4d-375ed2c1d897" />
+
+---
+<img width="1581" height="479" alt="image" src="https://github.com/user-attachments/assets/6ab21df2-f308-4f82-9e1b-8d9d2bb29692" />
+
+
+---
+
+### Summary
+
+This enhanced ETL pipeline automates the extraction of structured threat intelligence from **three MITRE ATT&CK knowledge bases**.
+It then cleans and stores this intelligence in MongoDB, where analysts can perform advanced queries, visualize attack patterns, or integrate it into threat-hunting platforms.
+
+**Domains Covered:**
+✅ Enterprise ATT&CK
+✅ Mobile ATT&CK
+✅ ICS ATT&CK
+
+By organizing threat intelligence across multiple domains in a consistent format, this ETL process supports more comprehensive, efficient, and scalable cybersecurity analytics.
