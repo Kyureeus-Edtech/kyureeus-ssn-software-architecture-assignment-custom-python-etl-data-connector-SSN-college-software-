@@ -115,7 +115,6 @@ MongoDB collections:
 MongoDB data Load:
 [![mongo](output_images/mongo_data.png)](output_images/mongo_data.png)
 
-
 ---
 
 ## 📜 License  
