@@ -1,0 +1,14 @@
+# RIPEstat ETL Pipeline Dependencies
+# Python 3.8+
+
+# MongoDB Driver
+pymongo==4.6.1
+
+# HTTP Requests
+requests==2.31.0
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# Optional: For better logging and monitoring
+colorlog==6.8.0
