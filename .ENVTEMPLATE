@@ -1,0 +1,4 @@
+RDAP_BASE_URL=https://rdap.org/
+MONGO_URI=mongodb://localhost:27017
+MONGO_DB=etl_db
+MONGO_COLLECTION=rdap_data
