@@ -1,0 +1,21 @@
+{
+  "description": "List of Cloudflare Trace API endpoints used in this ETL assignment.",
+  "source": "https://developers.cloudflare.com/fundamentals/get-started/reference/cloudflare-trace/",
+  "endpoints": [
+    {
+      "name": "Primary Trace Endpoint",
+      "url": "https://www.cloudflare.com/cdn-cgi/trace",
+      "purpose": "Fetches real-time client request trace information including IP, colo, TLS version, etc."
+    },
+    {
+      "name": "Regional Trace Node 1",
+      "url": "https://1.1.1.1/cdn-cgi/trace",
+      "purpose": "Fetches Cloudflare diagnostic trace data from DNS resolver node 1.1.1.1."
+    },
+    {
+      "name": "Regional Trace Node 2",
+      "url": "https://1.0.0.1/cdn-cgi/trace",
+      "purpose": "Fetches Cloudflare diagnostic trace data from DNS resolver node 1.0.0.1."
+    }
+  ]
+}

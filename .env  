@@ -1,0 +1,3 @@
+MONGO_URI=mongodb://localhost:27017
+MONGO_DB=etl_db
+COLLECTION_NAME=cloudflare_trace_raw
