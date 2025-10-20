@@ -1,0 +1,4 @@
+﻿# ENV_TEMPLATE - copy this to .env and fill values
+MONGO_URI=mongodb://localhost:27017
+MONGO_DB=network_data
+COLLECTION_NAME=cloudflare_etl
