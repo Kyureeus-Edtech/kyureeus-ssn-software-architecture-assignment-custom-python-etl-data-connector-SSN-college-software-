@@ -1,0 +1,4 @@
+MONGO_CONNECTION_URL=your_mogo_url
+BASE_URL=https://services.nvd.nist.gov/rest/json
+DB_NAME=nvd_db
+NVD_API_KEY=your_api_key
