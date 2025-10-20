@@ -1,0 +1,35 @@
+# RIPEstat ETL Pipeline - Environment Configuration Template
+# 
+# INSTRUCTIONS:
+# 1. Copy this file and rename it to .env
+# 2. Fill in your actual configuration values
+# 3. NEVER commit the .env file to version control
+# 4. Keep .env in your .gitignore
+
+# ============================================
+# MongoDB Configuration
+# ============================================
+# Local MongoDB
+MONGODB_URI=mongodb://localhost:27017/
+
+# MongoDB Atlas (Cloud) Example:
+# MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/?retryWrites=true&w=majority
+
+# Database name for storing RIPEstat data
+DATABASE_NAME=etl_database
+
+# ============================================
+# RIPEstat API Configuration
+# ============================================
+# Rate limiting delay between API requests (in seconds)
+# RIPEstat recommends respectful usage
+RATE_LIMIT_DELAY=1.0
+
+# ============================================
+# Optional Configuration
+# ============================================
+# Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+LOG_LEVEL=INFO
+
+# Maximum retries for failed API requests
+MAX_RETRIES=3
