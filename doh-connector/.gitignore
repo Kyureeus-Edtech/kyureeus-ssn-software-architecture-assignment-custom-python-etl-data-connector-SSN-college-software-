@@ -1,0 +1,174 @@
+# ========================================
+# CRITICAL: Environment Variables
+# ========================================
+# NEVER commit .env file - contains secrets
+.env
+.env.local
+.env.*.local
+
+# ========================================
+# Python
+# ========================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# ========================================
+# IDEs and Editors
+# ========================================
+# VS Code
+.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+.idea_modules/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.vim/
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ========================================
+# Operating Systems
+# ========================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
+.Trash-*
+
+# ========================================
+# MongoDB
+# ========================================
+# MongoDB dumps and backups
+dump/
+*.bson
+*.dump
+mongo-data/
+
+# ========================================
+# Logs and Databases
+# ========================================
+*.log
+*.sql
+*.sqlite
+*.db
+
+# ========================================
+# Jupyter Notebook
+# ========================================
+.ipynb_checkpoints
+*.ipynb
+
+# ========================================
+# Project Specific
+# ========================================
+# Temporary files
+temp/
+tmp/
+*.tmp
+*.bak
+
+# Data files (if not needed in repo)
+data/
+*.csv
+*.json
+*.xml
+
+# Output files
+output/
+results/
+
+# ========================================
+# Security
+# ========================================
+# API keys and secrets
+secrets.txt
+credentials.json
+*.key
+*.pem
+*.cert
+config.ini
+settings.ini
