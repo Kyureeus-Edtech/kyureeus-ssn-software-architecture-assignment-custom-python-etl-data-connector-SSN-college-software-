@@ -286,22 +286,34 @@ Add `.env` file based on `ENV_TEMPLATE`
 
 ---
 
-# Output Screenshots
-MongoDB Collections Overview
-![MongoDB Collections](screenshots/mongodb_collections.png)
+#  Output Screenshots
 
-`/info`
-![MongoDB Collections](screenshots/info.png)
+##  MongoDB Collections Overview
+<img src="screenshots/mongodb_collections.png" alt="MongoDB Collections Overview" height="400"/>
 
-`/getStatusCodes`
-![MongoDB Collections](screenshots/status_code.png)
+---
 
-`/analyze`
-![MongoDB Collections](screenshots/host_analysis.png)
+##  `/info` — API Version and Engine Info
+<img src="screenshots/info.png" alt="API Version and Engine Info" height="400"/>
 
-`/getEndpointData`
-![MongoDB Collections](screenshots/endpoints_data.png)
+---
 
-`/getRootCertsRaw`
-![MongoDB Collections](screenshots/certificate.png)
+##  `/getStatusCodes` — Status Code Definitions
+<img src="screenshots/status_code.png" alt="Status Code Definitions" height="400"/>
+
+---
+
+##  `/analyze` — SSL/TLS Host Analysis Results
+<img src="screenshots/host_analysis.png" alt="SSL/TLS Host Analysis Results" height="400"/>
+
+---
+
+##  `/getEndpointData` — Endpoint-Level Data
+<img src="screenshots/endpoints_data.png" alt="Endpoint Data" height="400"/>
+
+---
+
+##  `/getRootCertsRaw` — Trusted Root Certificates
+<img src="screenshots/certificate.png" alt="Trusted Root Certificates" height="400"/>
+
 
