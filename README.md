@@ -204,10 +204,7 @@ MIIDdzCCAl+gAwIBAgIEAgAAuTANBg...
 
 ### Step 1: Clone the Repository
 
-```
-git clone <repository-url>
-cd ssl-labs-connector
-```
+Clone the Repository and open the folder
 
 ### Step 2: Install Dependencies
 
