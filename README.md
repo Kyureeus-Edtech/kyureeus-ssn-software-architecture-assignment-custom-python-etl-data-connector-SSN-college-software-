@@ -287,6 +287,21 @@ Add `.env` file based on `ENV_TEMPLATE`
 ---
 
 # Output Screenshots
+MongoDB Collections Overview
 ![MongoDB Collections](screenshots/mongodb_collections.png)
 
+`/info`
+![MongoDB Collections](screenshots/info.png)
+
+`/getStatusCodes`
+![MongoDB Collections](screenshots/status_code.png)
+
+`/analyze`
+![MongoDB Collections](screenshots/host_analysis.png)
+
+`/getEndpointData`
+![MongoDB Collections](screenshots/endpoints_data.png)
+
+`/getRootCertsRaw`
+![MongoDB Collections](screenshots/certificate.png)
 
