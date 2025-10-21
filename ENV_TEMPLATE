@@ -1,0 +1,5 @@
+MONGODB_URI=your_mongodb_connection_string
+MONGODB_DB=your_database_name
+THREATFOX_AUTH_KEY=your_threatfox_key
+URLHAUS_AUTH_KEY=your_urlhaus_key
+
