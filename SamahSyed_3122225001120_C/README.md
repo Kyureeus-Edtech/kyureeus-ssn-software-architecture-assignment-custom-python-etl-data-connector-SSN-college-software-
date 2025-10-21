@@ -1,56 +1,72 @@
-# Custom Python ETL Data Connector — FireHOL IP Blocklist
+# Custom Python ETL Data Connector — NetworkCalc API
 
 ## Overview
 
 This project is part of the Software Architecture Assignment for the Kyureeus EdTech program at SSN CSE.  
 The goal is to build a custom Python ETL (Extract, Transform, Load) pipeline that connects to an external data provider, processes the data, and loads it into a MongoDB collection following secure coding and project structure best practices.
 
-For this submission, the chosen data provider is **FireHOL Level 1 IP Blocklist** — a publicly available list of known malicious IP addresses and CIDR ranges.
+For this submission, the chosen data provider is **NetworkCalc API** — a publicly available REST API providing network calculations, binary conversions, and SSL certificate security information.
 
 ## API Details 
-- **Source**: https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/firehol_level1.netset 
-- **Format**: Plain text, IP addresses 
+- **Source**: https://networkcalc.com/api
+- **Endpoints Used**:
+  - `/api/ip/{cidr}` - Subnet calculations
+  - `/api/binary/{value}?from={base}&to={base}` - Binary/base conversions
+  - `/api/security/certificate/{domain}` - SSL certificate information
+- **Format**: JSON
 - **Auth**: None
 
 ## Features Implemented
 
 ### Extract
-- Fetches the raw IP and CIDR blocklist from FireHOL’s public repository.  
-- Handles connection errors and request timeouts gracefully.
+- Fetches data from multiple NetworkCalc API endpoints with different query parameters
+- Queries include:
+  - **Subnet calculations**: `192.168.1.1/24`, `10.0.0.1/16`
+  - **Binary conversions**: 255 and 128 from base 10 to base 2
+  - **Security certificates**: example.com and google.com
+- Handles connection errors and request timeouts gracefully with 20-second timeout
+- Uses session management for efficient HTTP requests
+- Logs each API call with endpoint and query details
 
 ### Transform
-- **Validation:** Ensures each entry is a valid IPv4/IPv6 address or CIDR range.  
-- **Classification:** Adds a `type` field to classify records as `"ip"` or `"cidr"`.  
-- **Normalization:**  
-  - IPs are stored in standard string format (e.g., `192.168.0.1`).  
-  - CIDRs are normalized to canonical form (e.g., `192.168.0.0/24`).  
-- **De-duplication:** Removes duplicate entries in-memory before loading.  
-- Adds an ingestion timestamp (`ingested_at`) to each record for auditing.
+- **Enhanced Data Enrichment**: Adds comprehensive derived fields based on endpoint type
+- **Subnet Transformation**:
+  - Extracts network, broadcast, mask, and host count
+  - Calculates subnet bits from host count
+- **Binary Transformation**:
+  - Preserves input/output values and base conversions
+  - Calculates parity (even/odd) of binary output
+- **Security Transformation**:
+  - Parses certificate subject and issuer information
+  - Extracts validity dates (valid_from, valid_to)
+  - Calculates certificate validity duration in days
+  - Preserves serial numbers for audit trails
+- **Data Structure**: Creates summary objects alongside original data
+- **Timestamp Addition**: Adds ingestion timestamp (`ingestion_time`) for auditing
+- **Pretty Printing**: Displays MongoDB content before transformation and transformed records preview
 
 ### Load
-- Inserts the transformed records into a MongoDB collection in batches.  
-- Uses upsert operations to prevent duplicate records on repeated runs.  
-- Handles MongoDB connection errors and write failures.
+- Inserts transformed records into MongoDB collection
+- Creates indexes on `endpoint` and `ingestion_time` for efficient querying
+- Handles MongoDB connection errors and write failures
+- Pretty prints the latest 5 records after successful insertion
+- Provides detailed logging at each stage
 
 ## Secure Credential Handling
-- All database connection details are stored in a local `.env` file (not committed to Git).  
-- Environment variables are loaded using the `python-dotenv` library.  
-- `.gitignore` is configured to exclude `.env` and other sensitive files.
-
-## Testing
-- Integration and validation test scripts written and executed.
+- All database connection details are stored in a local `.env` file (not committed to Git)
+- Environment variables are loaded using the `python-dotenv` library
+- `.gitignore` is configured to exclude `.env` and other sensitive files
 
 ## Project Structure
 
 ```bash
 SamahSyed_3122225001120_C
-├── etl_connector.py: Main ETL pipeline script
-├── test_integration.py: Integration tests for full ETL flow
-├── test_validation.py: Unit tests for validation and transformation logic
+├── networkcalc_etl.py: Main ETL pipeline script
 ├── .env: Environment variables (excluded from Git)
 ├── requirements.txt: Python dependencies
+├── networkcalc_etl.log: ETL execution logs
 └── README.md: Documentation (this file)
-.gitignore: Ignore sensitive & unnecessary files such as .env, __pycache__, venv
+.gitignore: Ignore sensitive & unnecessary files such as .env, __pycache__, venv, *.log
 ```
 
 ## Installation & Setup
@@ -77,109 +93,156 @@ Create a `.env` file in the project root with the following variables:
 
 ```bash
 MONGO_URI=your_mongo_uri
-DB_NAME=your_db_name
-COLLECTION_NAME=your_collection_name
+MONGO_DATABASE=etl_database
+MONGO_COLLECTION=networkcalc_raw
 ```
 
 ## Running the ETL Pipeline
 ```bash
-python etl_connector.py
+python networkcalc_etl.py
 ```
 
 ## MongoDB Collection Design
-Each document in MongoDB looks like:
+Each document in MongoDB follows this structure:
+
+### Subnet Endpoint Document
 ```json
 {
-  "ip": "203.0.113.0/24",
-  "type": "cidr",
-  "ingested_at": "2025-08-14T10:15:30.000Z"
+  "_id": ObjectId("..."),
+  "endpoint": "subnet",
+  "query": "192.168.1.1/24",
+  "ingestion_time": "2025-10-21T06:22:10.059690+00:00",
+  "original_data": {
+    "address": {
+      "network_address": "192.168.1.0",
+      "broadcast_address": "192.168.1.255",
+      "subnet_mask": "255.255.255.0",
+      "assignable_hosts": 254,
+      "subnet_bits": 24
+    },
+    "status": "OK"
+  },
+  "summary": {
+    "network": "192.168.1.0",
+    "broadcast": "192.168.1.255",
+    "mask": "255.255.255.0",
+    "host_count": 254,
+    "subnet_bits": 8
+  }
 }
 ```
 
-## Testing & Validation
-
-### Run all tests
-```bash
-python test_integration.py
-python test_validation.py
+### Binary Endpoint Document
+```json
+{
+  "_id": ObjectId("..."),
+  "endpoint": "binary",
+  "query": {"value": 255, "from": 10, "to": 2},
+  "ingestion_time": "2025-10-21T06:22:10.683187+00:00",
+  "original_data": {
+    "original": "255",
+    "converted": "11111111",
+    "from": "10",
+    "to": "2",
+    "status": "OK"
+  },
+  "summary": {
+    "input": "255",
+    "output": "11111111",
+    "from_base": "10",
+    "to_base": "2",
+    "parity": "even"
+  }
+}
 ```
 
-
-## Testing Overview
-
-This project includes two main test scripts to ensure correctness and reliability of the ETL pipeline.
-
-### Test coverage includes:
-- Handles invalid entries in the blocklist.  
-- Logs skipped entries with reasons.  
-- Ensures consistent data insertion on repeated runs (**idempotent**).  
-- Includes timestamps for audit purposes.
-
-### Integration Test (`test_integration.py`)
-
-**Purpose**: Runs the entire ETL pipeline end-to-end against a dedicated test MongoDB database/collection.
-
-**Scenarios Tested**:
-- Records are successfully inserted into MongoDB.
-- Each record contains an `ingested_at` timestamp.
-- The `type` field is correctly classified as either `"ip"` or `"cidr"`.
-- No duplicate IP/CIDR entries are stored.
-
-**Sample Test Output**
-```bash
-2025-08-14 14:57:30,386 - INFO - ETL Pipeline started.
-2025-08-14 14:57:30,420 - INFO - Connected to MongoDB database: test_etl_db, collection: test_etl_collection
-2025-08-14 14:57:30,422 - INFO - Extracting data from https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/firehol_level1.netset ...
-2025-08-14 14:57:30,895 - INFO - Transforming data ...
-2025-08-14 14:57:30,964 - INFO - Transformation complete. 4565 unique valid records found.
-2025-08-14 14:57:30,965 - INFO - Loading 4565 records into MongoDB ...
-2025-08-14 14:57:49,183 - INFO - Data loaded successfully.
-2025-08-14 14:57:49,183 - INFO - ETL Pipeline finished. Duration: 0:00:18.797049
-Integration test passed.
+### Security Endpoint Document
+```json
+{
+  "_id": ObjectId("..."),
+  "endpoint": "security",
+  "query": "example.com",
+  "ingestion_time": "2025-10-21T06:22:11.492490+00:00",
+  "original_data": {
+    "certificate": {
+      "hostname": "example.com",
+      "issued_to": "*.example.com",
+      "issued_by": "DigiCert Global G3 TLS ECC SHA384 2020 CA1",
+      "valid_from": "2025-01-15T00:00:00.000Z",
+      "valid_to": "2026-01-15T23:59:59.000Z",
+      "serial_number": "0AD893BAFA68B0B7FB7A404F06ECAF9A",
+      "fingerprint": "31:0D:B7:AF:4B:2B:C9:04:0C:83:44:70:1A:CA:08:D0:C6:93:81:E3"
+    },
+    "status": "OK"
+  },
+  "summary": {
+    "subject": {},
+    "issuer": {},
+    "valid_from": "2025-01-15T00:00:00+00:00",
+    "valid_to": "2026-01-15T23:59:59+00:00",
+    "validity_days": 365,
+    "serial_number": "0AD893BAFA68B0B7FB7A404F06ECAF9A"
+  }
+}
 ```
 
+## Key Features
 
-### Validation Test (`test_validation.py`)
+### Data Enrichment & Transformation Logic
+- **Subnet Calculations**: Automatically calculates subnet bits from host count
+- **Binary Analysis**: Determines parity (even/odd) of binary strings
+- **Certificate Analysis**: Calculates certificate validity duration in days
+- **Dual Storage**: Maintains both original API response and enriched summary data
 
-**Purpose**: Tests the `transform()` function in isolation without touching the database.
+### Error Handling & Logging
+- Comprehensive logging to both file (`networkcalc_etl.log`) and console
+- Request timeout handling (20 seconds per API call)
+- MongoDB connection failure detection
+- Graceful handling of API failures - continues processing remaining endpoints
 
-**Scenarios Tested**:
-- Only valid IPs and CIDRs are kept — invalid entries are removed.
-- Duplicate entries are removed.
-- Correct classification between `"ip"` and `"cidr"`.
-- Original IP/CIDR strings are preserved in the output.
+### MongoDB Integration
+- Automatic index creation on `endpoint` and `ingestion_time`
+- Connection validation with ping command
+- Bulk insert operations for efficiency
+- Pretty-printed output for debugging and verification
 
-**Sample Input Used for Validation**:
-\```python
-raw_data = [
-    "192.168.0.1",    # valid IP
-    "192.168.0.0/24", # valid CIDR
-    "invalid_ip",     # invalid
-    "192.168.0.1"     # duplicate
-]
-\```
+## Sample ETL Execution Output
 
-**Assertions Performed**:
-- Only two records should remain after cleaning (`"192.168.0.1"` and `"192.168.0.0/24"`).
-- `"192.168.0.1"` is classified as `"ip"`.
-- `"192.168.0.0/24"` is classified as `"cidr"`.
-
-**Sample Test Output**
 ```bash
-2025-08-14 14:58:25,711 - INFO - Transforming data ...
-2025-08-14 14:58:25,711 - WARNING - Skipping invalid entry: invalid_ip
-2025-08-14 14:58:25,712 - INFO - Transformation complete. 2 unique valid records found.
-Validation test passed.
+2025-10-21 11:52:08,957 - INFO - Starting NetworkCalc ETL pipeline
+2025-10-21 11:52:09,015 - INFO - Connected to MongoDB: etl_database.networkcalc_raw
+2025-10-21 11:52:09,015 - INFO - Fetching subnet data for query: 192.168.1.1/24
+2025-10-21 11:52:10,059 - INFO - Fetching subnet data for query: 10.0.0.1/16
+2025-10-21 11:52:10,368 - INFO - Fetching binary data for query: {'value': 255, 'from': 10, 'to': 2}
+2025-10-21 11:52:10,683 - INFO - Fetching binary data for query: {'value': 128, 'from': 10, 'to': 2}
+2025-10-21 11:52:10,994 - INFO - Fetching security data for query: example.com
+2025-10-21 11:52:11,492 - INFO - Fetching security data for query: google.com
+2025-10-21 11:52:11,805 - INFO - Extracted data from 6 queries
+2025-10-21 11:52:11,807 - INFO - MongoDB content BEFORE transformation (first 5 records):
+2025-10-21 11:52:11,810 - INFO - Transformed records (preview of first 5):
+[Preview of transformed data with summaries...]
+2025-10-21 11:52:11,885 - INFO - Transformed 6 records
+2025-10-21 11:52:11,951 - INFO - Data loaded into MongoDB successfully. Latest 5 records:
+[Pretty-printed MongoDB documents...]
+2025-10-21 11:52:12,021 - INFO - ETL pipeline completed successfully
 ```
 
 ## Assignment Requirements Covered
-- **Data Provider:** FireHOL public IP blocklist.  
-- **Secure Credentials:** Stored in `.env`.  
-- **ETL Pipeline:** Extract → Transform → Load.  
-- **MongoDB Storage:** One collection, timestamped records.  
-- **Validation & Error Handling:** Implemented in all stages.  
-- **Git Hygiene:** `.env` ignored, descriptive README included.  
-- **Extra Enhancements:** Record classification, CIDR normalization, in-memory de-duplication.
+- **Data Provider**: NetworkCalc REST API with multiple endpoints
+- **Secure Credentials**: Stored in `.env`
+- **ETL Pipeline**: Extract → Transform → Load with data enrichment
+- **MongoDB Storage**: Single collection with indexed fields
+- **Multiple Queries**: 6 different queries across 3 endpoints
+- **Data Transformation**: Custom logic per endpoint type with calculated fields
+- **Validation & Error Handling**: Implemented in all stages
+- **Git Hygiene**: `.env` and log files ignored, descriptive README included
+- **Extra Enhancements**: 
+  - Data enrichment with derived calculations
+  - Pretty printing for debugging
+  - Dual storage (original + summary)
+  - Comprehensive logging
+  - Session-based HTTP requests
+  - Index creation for query optimization
 
 ---
 

@@ -1,0 +1,14 @@
+2025-10-21 11:52:08,957 - INFO - Starting NetworkCalc ETL pipeline
+2025-10-21 11:52:09,015 - INFO - Connected to MongoDB: etl_database.networkcalc_raw
+2025-10-21 11:52:09,015 - INFO - Fetching subnet data for query: 192.168.1.1/24
+2025-10-21 11:52:10,059 - INFO - Fetching subnet data for query: 10.0.0.1/16
+2025-10-21 11:52:10,368 - INFO - Fetching binary data for query: {'value': 255, 'from': 10, 'to': 2}
+2025-10-21 11:52:10,683 - INFO - Fetching binary data for query: {'value': 128, 'from': 10, 'to': 2}
+2025-10-21 11:52:10,994 - INFO - Fetching security data for query: example.com
+2025-10-21 11:52:11,492 - INFO - Fetching security data for query: google.com
+2025-10-21 11:52:11,805 - INFO - Extracted data from 6 queries
+2025-10-21 11:52:11,807 - INFO - MongoDB content BEFORE transformation (first 5 records):
+2025-10-21 11:52:11,810 - INFO - Transformed records (preview of first 5):
+2025-10-21 11:52:11,885 - INFO - Transformed 6 records
+2025-10-21 11:52:11,951 - INFO - Data loaded into MongoDB successfully. Latest 5 records:
+2025-10-21 11:52:12,021 - INFO - ETL pipeline completed successfully
