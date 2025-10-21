@@ -87,6 +87,9 @@ For IPs that returned 404, the MongoDB document structure confirms the error han
 }
 ```
 
+![Sample Output](assets/output.png)
+![MongoDB Loading](assets/mongodb.png)
+
 ## 🙋 Student Information
 
 Please ensure your final commit message includes your name and roll number.
