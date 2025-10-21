@@ -49,13 +49,8 @@ The project adheres to the secure coding, project structure, and validation guid
 
 3.  **Configure Credentials:** Ensure your **`.env`** file contains a valid `MONGO_URI`, `MONGO_DB_NAME`, and `MONGO_COLLECTION_NAME`.
 
-    *Example `.env` structure:*
-
-    ```env
-    MONGO_URI="mongodb://localhost:27017"
-    MONGO_DB_NAME="etl_db"
-    MONGO_COLLECTION_NAME="greynoise_community_raw"
-    ```
+    ENV_TEMPLATE has this information
+    
 
 4.  **Run the ETL Script:**
 
