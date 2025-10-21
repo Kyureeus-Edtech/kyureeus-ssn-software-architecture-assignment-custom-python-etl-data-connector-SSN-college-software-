@@ -1,0 +1,9 @@
+# Python
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+
+# Database files (if local, which is not the case for Mongo Atlas)
+*.db
