@@ -1,0 +1,4 @@
+# E:\sonarqube_connector\requirements.txt
+python-dotenv
+requests
+pymongo
