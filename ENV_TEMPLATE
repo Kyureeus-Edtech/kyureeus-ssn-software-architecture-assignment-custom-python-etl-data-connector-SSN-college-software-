@@ -1,15 +1,3 @@
-GN_API_KEY=your_greynoise_api_key
-GN_BASE_URL=https://api.greynoise.io
-
-TARGET_IPS=8.8.8.8,1.1.1.1
-INPUT_IPS_FILE=./ips.txt
-
-MONGO_URI=mongodb://localhost:27017
-MONGO_DB=greynoise
-CONNECTOR_NAME=greynoise_riot
-MONGO_COLLECTION_SUFFIX=_raw
-
-REQUEST_TIMEOUT_SECONDS=10
-MAX_RETRIES=5
-INITIAL_BACKOFF_SECONDS=1.0
-LOG_LEVEL=INFO
+# .env file
+MONGO_URI="mongodb://localhost:27017/"
+ABUSECH_API_KEY="API_Key"
