@@ -1,7 +1,7 @@
 # etl_cve.py
 """
 ETL Script for NVD CVE API
-Author: Mugilkrishna D U
+Author: Priyadharshini 
 Purpose: Extract CVE JSON from NVD API, transform it, and load into MongoDB
 Collections: Separate collection per API endpoint
 """
