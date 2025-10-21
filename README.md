@@ -1,135 +1,126 @@
-# SSN-college-software-architecture-Assignments-
-Assignment repository for building custom Python ETL data connectors (Kyureeus EdTech, SSN CSE). Students: Submit your ETL scripts here. Make sure your commit message includes your name and roll number.
-# Software Architecture Assignment: Custom Python ETL Data Connector
+# Assignment 2 – FreeGeoIP ETL Pipeline
 
-Welcome to the official repository for submitting your Software Architecture assignment on building custom data connectors (ETL pipelines) in Python. This assignment is part of the Kyureeus EdTech program for SSN CSE students.
+**Student Name:** Ankitha Reddy A  
 
----
-Guideline: Building and Managing Custom Data Connectors (ETL Pipeline) in Python
+**Register Number:** 3122225001013 
 
-1. Setting Up the Connector Environment
-a. Choose Your API Provider: Identify a data provider and understand its Base URL, Endpoints, and Authentication.
-b. Understand the API Documentation: Focus on headers, query params, pagination, rate limits, and response structure.
+**Digital ID:** 2210178
 
+**Course:** UCS2703 - Software Architecture
 
-2. Secure API Authentication Using Environment Variables
-a. Create a `.env` File Locally: Store API keys and secrets as KEY=VALUE pairs.
-b. Load Environment Variables in Code: Use libraries like `dotenv` to securely load environment variables.
+**Batch:** 2022-2026 (SSN College of Engineering)
 
-
-3. Design the ETL Pipeline
-Extract: Connect to the API, pass tokens/headers, and collect JSON data.
-Transform: Clean or reformat the data for MongoDB compatibility.
-Load: Store the transformed data into a MongoDB collection.
-
-
-4. MongoDB Collection Strategy
-Use one collection per connector, e.g., `connector_name_raw`.
-Store ingestion timestamps to support audits or updates.
-
-
-5. Iterative Testing & Validation
-Test for invalid responses, empty payloads, rate limits, and connectivity errors.
-Ensure consistent insertion into MongoDB.
-
-
-6. Git and Project Structure Guidelines
-a. Use a Central Git Repository: Clone the shared repo and create a new branch for your connector.
-b. Ignore Secrets: Add `.env` to `.gitignore` before the first commit.
-c. Push and Document: Write README.md with endpoint details, API usage, and example output.
-
-
-Final Checklist for Students
-Understand API documentation
-Secure credentials in `.env`
-Build complete ETL script
-Validate MongoDB inserts
-Push code to your branch
-Include descriptive README
-Submit Pull Request
-
-## 📋 Assignment Overview
-
-**Goal:**  
-Develop a Python script to connect with an API provider, extract data, transform it for compatibility, and load it into a MongoDB collection. Follow secure coding and project structure practices as outlined below.
+**Date:** 21/10/2025
 
 ---
 
-## ✅ Submission Checklist
+## Overview
 
-- [ ] Choose a data provider (API) and understand its documentation
-- [ ] Secure all API credentials using a `.env` file
-- [ ] Build a complete ETL pipeline: Extract → Transform → Load (into MongoDB)
-- [ ] Test and validate your pipeline (handle errors, invalid data, rate limits, etc.)
-- [ ] Follow the provided Git project structure
-- [ ] Write a clear and descriptive `README.md` in your folder with API details and usage instructions
-- [ ] **Include your name and roll number in your commit messages**
-- [ ] Push your code to your branch and submit a Pull Request
+This assignment implements a complete ETL (Extract, Transform, Load) pipeline to extract geolocation data from the IPStack API, enrich it with analytical intelligence, and store the processed results in MongoDB. The pipeline integrates risk assessment, network profiling, and global relationship clustering, providing a structured intelligence framework for IP-based geospatial analysis.
 
 ---
 
-## 📦 Project Structure
+## Key Features
 
-/your-branch-name/
-├── etl_connector.py
-├── .env
-├── requirements.txt
-├── README.md
-└── (any additional scripts or configs)
+1. **Data Extraction**
+   - Retrieves geolocation details for sample IP addresses using IPStack API.
+   - Handles missing fields and API errors gracefully.
 
+2. **Data Transformation**
+   - **Risk Profiling:** Computes a geographic risk score based on continent stability, economic classification, and timezone alignment.
+   - **Network Intelligence:** Classifies ISP type, evaluates traffic patterns, and assesses security posture.
+   - **Global Relationships:** Creates country and risk clusters for relationship analysis.
 
-- **`.env`**: Store sensitive credentials; do **not** commit this file.
-- **`etl_connector.py`**: Your main ETL script.
-- **`requirements.txt`**: List all Python dependencies.
-- **`README.md`**: Instructions for your connector.
+3. **Data Loading**
+   - Stores enriched intelligence documents in a MongoDB collection (`transformed_geo_data`) using upsert logic.
+   - Ensures data consistency and prevents duplication.
 
----
-
-## 🛡️ Secure Authentication
-
-- Store all API keys/secrets in a local `.env` file.
-- Load credentials using the `dotenv` Python library.
-- Add `.env` to `.gitignore` before committing.
+4. **Configurability**
+   - Sensitive credentials such as API key and MongoDB URI are managed via a `.env` file.
+   - `TEST_MODE` option allows limiting the number of IPs for debugging.
 
 ---
 
-## 🗃️ MongoDB Guidelines
+## Technology Stack
 
-- Use one MongoDB collection per connector (e.g., `connectorname_raw`).
-- Store ingestion timestamps for audit and update purposes.
-
----
-
-## 🧪 Testing & Validation
-
-- Check for invalid responses, empty payloads, rate limits, and connectivity issues.
-- Ensure data is correctly inserted into MongoDB.
+- **Language:** Python  
+- **API:** IPStack Geolocation API  
+- **Database:** MongoDB  
+- **Libraries:** `requests`, `pymongo`, `python-dotenv`, `logging`, `hashlib`, `datetime`, `collections`
 
 ---
 
-## 📝 Git & Submission Guidelines
+## How to Run
 
-1. **Clone the repository** and create your own branch.
-2. **Add your code and documentation** in your folder/branch.
-3. **Do not commit** your `.env` or secrets.
-4. **Write clear commit messages** (include your name and roll number).
-5. **Submit a Pull Request** when done.
+1. **Set Environment Variables:**  
+   Create a `.env` file with:
+`IPSTACK_API_KEY=your_api_key_here`
+`MONGO_URI=mongodb://localhost:27017/`
+`MONGO_DB_NAME=geolocation_db`
 
----
+2. **Install Dependencies:**  
+`pip install requests pymongo python-dotenv`
 
-## 💡 Additional Resources
+3. **Run the Script:**  
+`python etl_connector.py`
 
-- [python-dotenv Documentation](https://saurabh-kumar.com/python-dotenv/)
-- [MongoDB Python Driver (PyMongo)](https://pymongo.readthedocs.io/en/stable/)
-- [API Documentation Example](https://restfulapi.net/)
-
----
-
-## 📢 Need Help?
-
-- Post your queries in the [KYUREEUS/SSN College - WhatsApp group](#) .
-- Discuss issues, share progress, and help each other.
+4. **Output:**  
+- Console logs for each pipeline step.
+- Tabulated summary of processed IPs, inserted/updated records, countries covered, and risk distribution.
 
 ---
 
-Happy coding! 🚀
+## MongoDB Output Structure
+
+Each document stored in MongoDB follows this structure:
+
+```
+{
+"_id": "unique_hash",
+"source_ip": "8.8.8.8",
+"basic_geo": {
+ "country": "United States",
+ "region": "California",
+ "city": "Mountain View",
+ "coordinates": {"lat": 37.388, "lng": -122.074},
+ "continent": "North America"
+},
+"risk_intelligence": {
+ "overall_risk_score": 1.5,
+ "development_tier": "Developed",
+ "regional_stability": 0.9,
+ "timezone_alignment": 0.6
+},
+"network_intelligence": {
+ "isp_type": "hosting",
+ "traffic_volume": "consistent",
+ "peak_hours": [0, 24],
+ "security_posture": "enterprise"
+},
+"global_relationships": {
+ "country_cluster": {
+   "country": "United States",
+   "cluster_members": 5,
+   "member_ips": ["8.8.8.8", "142.250.191.206", "..."]
+ },
+ "risk_cluster": {
+   "level": "low_risk",
+   "cluster_members": 7,
+   "similar_risk_ips": ["8.8.8.8", "14.1.44.138", "..."]
+ },
+ "regional_partners": ["Canada", "Mexico", "United Kingdom"]
+},
+"ingestion_timestamp": "2025-10-21T14:00:00Z",
+"data_freshness": "realtime"
+}
+```
+
+## Learning Outcomes
+By completing this assignment, I have learnt to:
+
+1. Design and implement an end-to-end ETL pipeline integrating API data extraction, transformation, and database loading.
+2. Apply geospatial and network intelligence techniques for risk profiling and ISP classification.
+3. Build global relationship models to identify country and risk clusters.
+4. Use MongoDB for storing structured intelligence data with upsert operations.
+5. Manage credentials securely and implement error handling for API calls and data ingestion.
+6. Interpret and visualize geolocation intelligence metrics for analytical and decision-making purposes.
