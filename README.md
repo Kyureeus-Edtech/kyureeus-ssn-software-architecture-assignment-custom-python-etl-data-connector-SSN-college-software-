@@ -86,14 +86,9 @@ For IPs that returned 404, the MongoDB document structure confirms the error han
   "status_code": 404
 }
 ```
+## 📊 Sample Output
 
 ![Sample Output](assets/output.png)
 ![MongoDB Loading](assets/mongodb.png)
 
-## 🙋 Student Information
 
-Please ensure your final commit message includes your name and roll number.
-
-  * **Student Name:** Akshatha Anbalagan
-  * **Roll Number:** akshatha11anbalagan
-  * **Commit Example:** `feat(greynoise): Final ETL script with MongoDB validation. Student: Akshatha Anbalagan, Roll: akshatha11anbalagan`
