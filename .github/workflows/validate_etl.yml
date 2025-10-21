@@ -1,0 +1,45 @@
+name: Validate ETL Connector (Dummy Check)
+
+on:
+  push:
+    branches:
+      - MugilkrishnaDU_3122225001073_CSEB
+  pull_request:
+    branches:
+      - MugilkrishnaDU_3122225001073_CSEB
+
+jobs:
+  dummy-validation:
+    name: Dummy ETL Validation Job
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Validate File Structure
+        run: |
+          echo "Checking required files..."
+          if not exist etl_connector.py (echo MISSING: etl_connector.py && exit 1)
+          if not exist requirements.txt (echo MISSING: requirements.txt && exit 1)
+          if not exist README.md (echo MISSING: README.md && exit 1)
+          if not exist ENV_TEMPLATE (echo MISSING: ENV_TEMPLATE && exit 1)
+          echo "✅ All essential files are present."
+
+      - name: Lint Code (flake8)
+        run: |
+          pip install flake8
+          flake8 . --max-line-length=120
+
+      - name: Dummy Dry Run
+        run: |
+          echo "✅ Dummy ETL validation complete. (No API call or DB insert performed)"
