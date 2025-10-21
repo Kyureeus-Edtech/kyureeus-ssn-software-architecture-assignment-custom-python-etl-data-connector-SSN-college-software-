@@ -1,7 +1,7 @@
 # NVD CVE ETL Connector
 
-**Author:** Mugilkrishna D U  
-**Roll No:** 3122 22 5001 073  
+**Author:** Priyadharshini T  
+**Roll No:** 3122 22 5001 100  
 **Year/Sec:** CSE B  
 **Department:** Computer Science & Engineering, SSN College of Engineering
 
