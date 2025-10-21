@@ -1,7 +1,7 @@
 # etl_cve_history.py
 """
 ETL Script for NVD CVE Change History API
-Author: Mugilkrishna D U
+Author: Priyadharshini 
 Purpose: Extract CVE history JSON from NVD API, transform it, and load into MongoDB
 Collections: Separate collection per API endpoint
 Upsert logic: Uses 'cve.id' if present, otherwise timestamp + action as unique _id
