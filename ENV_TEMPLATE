@@ -1,0 +1,3 @@
+IPSTACK_API_KEY= "ipstack_api_key"
+MONGO_URI=mongodb://localhost:27017/
+MONGO_DB_NAME=geolocation_db
