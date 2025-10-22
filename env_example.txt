@@ -1,0 +1,25 @@
+# CIRCL Passive DNS ETL Connector Configuration
+# Copy this file to .env and modify as needed
+
+# CIRCL Passive DNS API Configuration
+API_BASE_URL=https://www.circl.lu/pdns/query
+API_ENDPOINTS=circl.lu,8.8.8.8,example.com
+
+# Authentication (CIRCL API doesn't require auth for public queries)
+API_KEY=
+API_AUTH_HEADER=
+API_AUTH_PREFIX=
+
+# MongoDB Configuration
+MONGO_URI=mongodb://localhost:27017
+MONGO_DB=etl2
+MONGO_COLLECTION=datalist
+
+# Three Example Queries:
+# 1. Domain query: circl.lu - queries DNS records for the circl.lu domain
+# 2. IP query: 8.8.8.8 - queries reverse DNS records for Google's DNS server
+# 3. Another domain: example.com - queries DNS records for example.com
+
+# Additional query examples you can try:
+# API_ENDPOINTS=google.com,1.1.1.1,github.com
+# API_ENDPOINTS=malware.com,192.168.1.1,suspicious-domain.net

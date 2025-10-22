@@ -1,6 +1,6 @@
-### ETL Connector (Python → REST API → MongoDB)
+### CIRCL Passive DNS ETL Connector (Python → CIRCL API → MongoDB)
 
-A minimal, production-grade ETL that calls a REST API with an API key in headers, transforms records by adding timestamps, and loads them into MongoDB. Windows-friendly run steps included.
+A production-grade ETL connector that queries the CIRCL Passive DNS API, transforms DNS records by adding metadata and classifications, and loads them into MongoDB. This connector demonstrates how to work with NDJSON responses and handle DNS-specific data structures.
 
 ### Quickstart (Windows PowerShell)
 
@@ -16,48 +16,100 @@ pip install -r requirements.txt
 ```
 
 - Configure environment
-  - Edit `.env` with your values.
-  - Defaults target a public JSON API, and still send your API key in the headers.
+  - Copy `env_example.txt` to `.env` and modify as needed
+  - The connector is pre-configured for CIRCL Passive DNS API
 
 - Run the connector
 ```powershell
 python etl_connector.py
 ```
 
-### .env
+### Configuration (.env)
 
-- `.env` is ignored by Git. Example:
+The connector uses environment variables for configuration. Example `.env`:
+
 ```ini
-API_KEY=REPLACE_ME
-API_BASE_URL=https://jsonplaceholder.typicode.com
-API_ENDPOINTS=posts,comments,users
-API_AUTH_HEADER=Authorization
-API_AUTH_PREFIX=Bearer
+# CIRCL Passive DNS API Configuration
+API_BASE_URL=https://www.circl.lu/pdns/query
+API_ENDPOINTS=circl.lu,8.8.8.8,example.com
 
+# Authentication (CIRCL API doesn't require auth for public queries)
+API_KEY=
+API_AUTH_HEADER=
+API_AUTH_PREFIX=
+
+# MongoDB Configuration
 MONGO_URI=mongodb://localhost:27017
-MONGO_DB=etl_db
-# Optional override (default: <host>_raw derived from API_BASE_URL)
-# MONGO_COLLECTION=
+MONGO_DB=etl2
+MONGO_COLLECTION=datalist
 ```
 
-### Behavior
-- Sends `API_KEY` as `API_AUTH_HEADER` using `API_AUTH_PREFIX` (e.g., `Authorization: Bearer <KEY>`).
-- Fetches each endpoint in `API_ENDPOINTS` from `API_BASE_URL`.
-- Transforms each record by adding `ingested_at` (UTC) and `source_endpoint`.
-- Loads into MongoDB collection named `<hostname>_raw` (e.g., `jsonplaceholder_typicode_com_raw`).
-- Writes pretty JSON dumps to `etl_output/` for debugging.
+### Three Endpoint Examples
 
-### MongoDB
-- Default URI is `mongodb://localhost:27017`; change via `MONGO_URI`.
-- Database defaults to `etl_db`; change via `MONGO_DB`.
-- One collection per connector: `<hostname>_raw` or via `MONGO_COLLECTION`.
+The connector demonstrates three different types of DNS queries:
 
-### Testing & Validation Checklist
-- Invalid responses and parsing errors raise with clear logs.
-- Retries with exponential backoff on 429/5xx.
-- Empty payloads result in 0 inserts; script continues.
-- Connectivity issues are retried and logged.
+1. **Domain Query**: `circl.lu` - Retrieves all DNS records associated with the circl.lu domain
+2. **IP Query**: `8.8.8.8` - Performs reverse DNS lookup for Google's public DNS server
+3. **Another Domain**: `example.com` - Queries DNS records for example.com
+
+### Data Transformation
+
+The connector enriches DNS records with:
+
+- **ETL Metadata**: `ingested_at`, `query_value`, `source_api`
+- **Time Conversion**: Converts Unix timestamps to datetime objects (`time_first_datetime`, `time_last_datetime`)
+- **Record Classification**: Categorizes DNS record types (`basic`, `security`, `other`)
+- **Query Classification**: Identifies query type (`domain`, `ipv4`, `ipv6`, `unknown`)
+
+### MongoDB Storage
+
+- **Database**: `etl2` (configurable via `MONGO_DB`)
+- **Collection**: `datalist` (configurable via `MONGO_COLLECTION`)
+- **Documents**: Each DNS record is stored as a separate document with enriched metadata
+
+### API Response Handling
+
+The connector handles CIRCL's NDJSON (Newline Delimited JSON) response format:
+
+```json
+{"rrtype": "A", "rrname": "185.194.93.14", "rdata": "circl.lu", "count": "19", "time_first": "1696798385", "time_last": "1697890824"}
+{"rrtype": "AAAA", "rrname": "2a00:5980:93::14", "rdata": "circl.lu", "count": "18", "time_first": "1696798385", "time_last": "1697890824"}
+```
+
+### Error Handling
+
+- **Rate Limiting**: Handles 429 responses with retry logic
+- **NDJSON Parsing**: Gracefully handles malformed JSON lines
+- **API Errors**: Captures and logs CIRCL-specific error headers (`x-dribble-errors`)
+- **Pagination**: Supports CIRCL's pagination headers (`x-dribble-cursor`)
+
+### Debug Output
+
+- **Log File**: `etl_connector.log` with detailed processing information
+- **JSON Files**: Individual files in `etl_output/` directory for each query
+- **MongoDB**: All records stored with full metadata for analysis
+
+### Testing & Validation
+
+- ✅ Handles NDJSON responses from CIRCL API
+- ✅ Transforms DNS records with proper metadata
+- ✅ Classifies record types and query types
+- ✅ Stores enriched data in MongoDB
+- ✅ Provides comprehensive logging and debug output
+- ✅ Handles API errors and rate limiting gracefully
+
+### Use Cases
+
+This connector is ideal for:
+
+- **Security Research**: Analyzing DNS patterns and historical data
+- **Threat Intelligence**: Tracking domain and IP associations
+- **DNS Forensics**: Investigating suspicious domains or IPs
+- **Data Science**: Building datasets for DNS analysis
 
 ### Notes
-- The default `API_BASE_URL` is a public JSON service that does not require auth; your API key will be sent but ignored. Replace `API_BASE_URL` and `API_ENDPOINTS` to target your provider.
-- Keep `.env` out of version control.
+
+- The CIRCL Passive DNS API is free for public use and doesn't require authentication
+- Access to the full API may require registration for higher volume usage
+- The connector demonstrates best practices for working with NDJSON APIs
+- All timestamps are converted to UTC for consistency
