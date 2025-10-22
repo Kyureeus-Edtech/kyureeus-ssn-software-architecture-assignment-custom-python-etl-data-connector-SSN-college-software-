@@ -1,0 +1,9 @@
+# --- MongoDB ---
+MONGODB_URI=mongodb://<host>:<port>/
+MONGODB_DB=<database_name>
+MONGODB_COLLECTION_SPAMHAUS=<spamhaus_collection_name>
+MONGODB_COLLECTION_CVE=<cve_collection_name>
+
+# --- Feeds ---
+SPAMHAUS_URL=<spamhaus_feed_url>
+NVD_URL=<nvd_feed_url>
