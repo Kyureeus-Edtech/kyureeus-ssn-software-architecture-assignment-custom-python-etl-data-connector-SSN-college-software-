@@ -1,0 +1,38 @@
+# Ignore Python cache and build files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+*.log
+
+# Virtual environment folders
+env/
+venv/
+.venv/
+
+# Environment variables and credentials
+.env
+.env.local
+.env.dev
+.env.prod
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# MongoDB dump or export data
+*.bson
+*.json
+dump/
+
+# Temporary or test files
+temp/
+tmp/
+*.tmp
