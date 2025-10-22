@@ -1,0 +1,63 @@
+2025-10-22 15:02:23,532 - INFO - Connecting to MongoDB...
+2025-10-22 15:02:23,551 - INFO - Successfully connected to MongoDB
+2025-10-22 15:02:23,551 - WARNING - Failed to fetch/store metadata: 'RIPEstat' object has no attribute 'data_meta'
+2025-10-22 15:02:23,552 - INFO - Fetching whois for AS3333...
+2025-10-22 15:02:23,552 - WARNING - Attempt 1 failed for AS3333 [whois]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:02:28,553 - WARNING - Attempt 2 failed for AS3333 [whois]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:02:33,554 - WARNING - Attempt 3 failed for AS3333 [whois]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:02:33,554 - ERROR - Failed to fetch AS3333 [whois] after 3 attempts
+2025-10-22 15:02:33,555 - INFO - Fetching geoloc for AS3333...
+2025-10-22 15:02:33,556 - WARNING - Attempt 1 failed for AS3333 [geoloc]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:02:38,557 - WARNING - Attempt 2 failed for AS3333 [geoloc]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:02:43,558 - WARNING - Attempt 3 failed for AS3333 [geoloc]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:02:43,558 - ERROR - Failed to fetch AS3333 [geoloc] after 3 attempts
+2025-10-22 15:02:43,558 - INFO - Fetching prefix-overview for AS3333...
+2025-10-22 15:02:43,558 - WARNING - Attempt 1 failed for AS3333 [prefix-overview]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:02:48,559 - WARNING - Attempt 2 failed for AS3333 [prefix-overview]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:02:53,561 - WARNING - Attempt 3 failed for AS3333 [prefix-overview]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:02:53,561 - ERROR - Failed to fetch AS3333 [prefix-overview] after 3 attempts
+2025-10-22 15:02:53,561 - INFO - Fetching whois for 193.0.10.0/23...
+2025-10-22 15:02:53,561 - WARNING - Attempt 1 failed for 193.0.10.0/23 [whois]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:02:58,562 - WARNING - Attempt 2 failed for 193.0.10.0/23 [whois]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:03:03,563 - WARNING - Attempt 3 failed for 193.0.10.0/23 [whois]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:03:03,563 - ERROR - Failed to fetch 193.0.10.0/23 [whois] after 3 attempts
+2025-10-22 15:03:03,564 - INFO - Fetching geoloc for 193.0.10.0/23...
+2025-10-22 15:03:03,564 - WARNING - Attempt 1 failed for 193.0.10.0/23 [geoloc]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:03:08,566 - WARNING - Attempt 2 failed for 193.0.10.0/23 [geoloc]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:03:13,566 - WARNING - Attempt 3 failed for 193.0.10.0/23 [geoloc]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:03:13,568 - ERROR - Failed to fetch 193.0.10.0/23 [geoloc] after 3 attempts
+2025-10-22 15:03:13,568 - INFO - Fetching prefix-overview for 193.0.10.0/23...
+2025-10-22 15:03:13,568 - WARNING - Attempt 1 failed for 193.0.10.0/23 [prefix-overview]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:03:18,570 - WARNING - Attempt 2 failed for 193.0.10.0/23 [prefix-overview]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:03:23,571 - WARNING - Attempt 3 failed for 193.0.10.0/23 [prefix-overview]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:03:23,571 - ERROR - Failed to fetch 193.0.10.0/23 [prefix-overview] after 3 attempts
+2025-10-22 15:03:23,572 - INFO - Fetching whois for ripe.net...
+2025-10-22 15:03:23,572 - WARNING - Attempt 1 failed for ripe.net [whois]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:03:28,573 - WARNING - Attempt 2 failed for ripe.net [whois]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:03:33,574 - WARNING - Attempt 3 failed for ripe.net [whois]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:03:33,574 - ERROR - Failed to fetch ripe.net [whois] after 3 attempts
+2025-10-22 15:03:33,575 - INFO - Fetching geoloc for ripe.net...
+2025-10-22 15:03:33,575 - WARNING - Attempt 1 failed for ripe.net [geoloc]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:03:38,577 - WARNING - Attempt 2 failed for ripe.net [geoloc]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:03:43,578 - WARNING - Attempt 3 failed for ripe.net [geoloc]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:03:43,578 - ERROR - Failed to fetch ripe.net [geoloc] after 3 attempts
+2025-10-22 15:03:43,578 - INFO - Fetching prefix-overview for ripe.net...
+2025-10-22 15:03:43,578 - WARNING - Attempt 1 failed for ripe.net [prefix-overview]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:03:48,580 - WARNING - Attempt 2 failed for ripe.net [prefix-overview]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:03:53,581 - WARNING - Attempt 3 failed for ripe.net [prefix-overview]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:03:53,581 - ERROR - Failed to fetch ripe.net [prefix-overview] after 3 attempts
+2025-10-22 15:03:53,581 - INFO - Fetching whois for NL...
+2025-10-22 15:03:53,582 - WARNING - Attempt 1 failed for NL [whois]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:03:58,583 - WARNING - Attempt 2 failed for NL [whois]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:04:03,584 - WARNING - Attempt 3 failed for NL [whois]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:04:03,585 - ERROR - Failed to fetch NL [whois] after 3 attempts
+2025-10-22 15:04:03,586 - INFO - Fetching geoloc for NL...
+2025-10-22 15:04:03,586 - WARNING - Attempt 1 failed for NL [geoloc]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:04:08,587 - WARNING - Attempt 2 failed for NL [geoloc]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:04:13,588 - WARNING - Attempt 3 failed for NL [geoloc]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:04:13,588 - ERROR - Failed to fetch NL [geoloc] after 3 attempts
+2025-10-22 15:04:13,589 - INFO - Fetching prefix-overview for NL...
+2025-10-22 15:04:13,589 - WARNING - Attempt 1 failed for NL [prefix-overview]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:04:18,590 - WARNING - Attempt 2 failed for NL [prefix-overview]: 'RIPEstat' object has no attribute 'data'
+2025-10-22 15:04:20,261 - WARNING - ETL pipeline interrupted by user
+2025-10-22 15:04:20,262 - INFO - MongoDB connection closed
