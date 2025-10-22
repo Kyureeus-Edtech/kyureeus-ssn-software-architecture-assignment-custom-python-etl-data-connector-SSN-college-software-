@@ -35,8 +35,8 @@ Create a `.env` file in the project root (do **not** push it to GitHub).
 Example `.env` file:
 
 ```env
-MONGO_URI=mongodb://localhost:27017
-MONGO_DB=network_intelligence
+MONGO_URI="your mongo url"
+MONGO_DB="your db name"
 ```
 
 💡 The repository includes an `ENV_TEMPLATE` file as a reference for required keys.
