@@ -18,6 +18,7 @@ The ETL script extracts breach and data class information from the HIBP API, val
 
 ---
 
+
 ## 🎯 Goals and Learning Objectives
 
 The successful completion of this project demonstrates proficiency in:
@@ -78,7 +79,5 @@ The connector uses the following HIBP API v3 endpoints:
 
 You can override variables or fetch specific breach details using environment variables directly:
 
-```bash
-# Fetch details for specific breaches (e.g., 'Adobe' and 'LinkedIn')
-BREACH_NAMES="Adobe,LinkedIn" python etl_connector.py
-
+### Ouput screenshot
+<img width="1042" height="813" alt="Screenshot 2025-10-23 at 5 57 39 PM" src="https://github.com/user-attachments/assets/7205a01c-dfff-41ea-abc0-09034a14575f" />
