@@ -17,3 +17,6 @@ The connector extracts data from the API, transforms it into a unified JSON stru
 2. Install dependencies:
    ```bash
    pip install -r requirements.txt
+3.Run the ETL connector:
+     python etl_connector.py
+4.Verify inserted data in your MongoDB database.
