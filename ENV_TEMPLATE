@@ -1,0 +1,5 @@
+MB_AUTH_KEY= dummy_apiKey
+MONGO_URI=mongodb://localhost:27017
+MB_DB= db_name
+COLLECTION_NAME= col_name
+MAX_PULSES= 50
