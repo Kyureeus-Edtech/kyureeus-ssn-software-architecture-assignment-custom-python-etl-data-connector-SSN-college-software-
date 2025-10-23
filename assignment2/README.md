@@ -1,34 +1,19 @@
-\# FreeGeoIP ETL Connector - Assignment 2
+# FreeGeoIP ETL Connector - Assignment 2
 
+**Student:** Hemalatha  
+**Roll No:** 3122225001039
 
+## Overview
+This Python ETL connector retrieves IP geolocation data from [FreeGeoIP.app](https://freegeoip.app) using three endpoints:
+- `/json/{ip}`
+- `/csv/{ip}`
+- `/xml/{ip}`
 
-\*\*Student:\*\* Hemalatha  
+The connector extracts data from the API, transforms it into a unified JSON structure, and loads it into a MongoDB collection.
 
-\*\*Roll No:\*\* 312320104056  
+## Steps to Run
 
-
-
-\## Overview
-
-This ETL connector fetches IP geolocation data from \[freegeoip.app](https://freegeoip.app) using \*\*three endpoints\*\*:
-
-\- `/json/{ip}`
-
-\- `/csv/{ip}`
-
-\- `/xml/{ip}`
-
-
-
-It transforms the data into JSON format and stores it in MongoDB.
-
-
-
-\## Steps to Run
-
-
-
-1\. Create `.env` file from `.env.template` and update your MongoDB details.
-
-
-
+1. Create a `.env` file (based on `.env.template`) and add your MongoDB connection details.  
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
