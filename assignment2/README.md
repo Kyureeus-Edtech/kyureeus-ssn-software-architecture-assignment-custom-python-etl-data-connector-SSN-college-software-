@@ -1,6 +1,6 @@
 # FreeGeoIP ETL Connector - Assignment 2
 
-**Student:** Hemalatha  
+**Student Name:** Hemalatha R
 **Roll No:** 3122225001039
 
 ## Overview
