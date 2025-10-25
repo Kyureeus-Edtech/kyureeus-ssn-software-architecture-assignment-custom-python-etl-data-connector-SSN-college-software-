@@ -1,0 +1,8 @@
+# MongoDB connection
+MONGO_URI=your_mongodb_connection_string
+MONGO_DB=your_database_name
+
+# RIPEstat API endpoints
+RIPESTAT_COUNTRY_RESOURCE_URL=https://stat.ripe.net/data/country-resource-list/data.json
+RIPESTAT_ANNOUNCED_PREFIXES_URL=https://stat.ripe.net/data/announced-prefixes/data.json
+RIPESTAT_ATLAS_PROBES_URL=https://stat.ripe.net/data/atlas-probes/data.json
