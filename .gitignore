@@ -1,0 +1,28 @@
+# Environment variables
+.env
+
+# Python cache and virtual environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.sqlite3
+*.db
+
+# Virtual environment folders
+venv/
+myvenv/
+.env/
+env/
+
+# IDE or OS-specific files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# MongoDB dump files or data exports
+*.bson
+*.json
+*.csv
