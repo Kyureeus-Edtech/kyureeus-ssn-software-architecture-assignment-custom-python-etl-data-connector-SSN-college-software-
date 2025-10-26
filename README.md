@@ -1,3 +1,4 @@
+[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/b1x675tx)
 # SSN-college-software-architecture-Assignments-
 Assignment repository for building custom Python ETL data connectors (Kyureeus EdTech, SSN CSE). Students: Submit your ETL scripts here. Make sure your commit message includes your name and roll number.
 # Software Architecture Assignment: Custom Python ETL Data Connector
@@ -133,3 +134,36 @@ Develop a Python script to connect with an API provider, extract data, transform
 ---
 
 Happy coding! 🚀
+# Blocklist.de ETL Data Connector
+
+**Student Name:** PrabanjanRAj M K 
+**Roll No:** 3122225001307  
+**Course:** Software Architecture (Kyureeus EdTech, SSN CSE)
+
+---
+
+## 🔍 Overview
+This ETL (Extract, Transform, Load) connector fetches cybersecurity threat data from multiple **Blocklist.de** APIs (such as SSH, Mail, Apache, IMAP, and Bots) and loads structured IP data into **MongoDB**.
+
+---
+
+## 🧠 ETL Flow
+1. **Extract** – Fetch data using HTTP GET requests from Blocklist.de APIs.  
+2. **Transform** – Clean raw text, remove comments, and format IPs into a list.  
+3. **Load** – Store structured JSON documents into MongoDB with ingestion timestamps.
+
+---
+
+## ⚙️ Requirements
+- Python 3.10+
+- MongoDB (Local or Atlas)
+- Installed dependencies:
+  ```bash
+  pip install -r requirements.txt
+
+  ## ETL Script Output
+
+Here is the output when the ETL connector runs successfully:
+
+![ETL Output](images/img1.png)
+![ETL Output](images/img2.png)
