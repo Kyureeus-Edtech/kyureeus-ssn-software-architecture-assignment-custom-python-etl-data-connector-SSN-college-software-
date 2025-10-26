@@ -217,5 +217,5 @@ The pipeline is validated by a comprehensive test file that covers all modules o
 After a successful run, the data will be available in your MongoDB instance. You can use a tool like MongoDB Compass to view the collections inside the  database.
 
 ![Output](Mongo_output.png)
-![Output](Mongooutput1.png)
+![Output](Mongo_output1.png)
 
