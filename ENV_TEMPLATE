@@ -1,0 +1,11 @@
+BASEURL=http://localhost:9000
+API_ENDPOINT_METRIC=/api/metrics/search
+API_ENDPOINT_RULES=/api/rules/search
+API_ENDPOINT_QUALITY_PROFILES=/api/qualityprofiles/search
+MONGODB_URI=your_mongodb_connection_string
+MONGODB_DB=your_database_name
+COLLECTION_NAME_METRIC=your_collection1_name
+COLLECTION_NAME_RULES=your_collection2_name
+COLLECTION_NAME_QUALITY_PROFILES=your_collection3_name
+SONARQUBE_USERNAME=your_username
+SONARQUBE_PASSWORD=your_password
