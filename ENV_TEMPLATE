@@ -1,0 +1,29 @@
+# Environment Variables Template for OSV (Open Source Vulnerabilities) ETL Connector
+# Copy this file to .env and replace placeholder values with your actual configuration
+# Author: Janeshvar S
+# Roll Number: 3122225001047
+
+# OSV API Configuration
+OSV_API_BASE_URL=https://api.osv.dev
+OSV_API_KEY=
+OSV_API_SECRET=
+
+# MongoDB Configuration
+MONGODB_CONNECTION_STRING=mongodb://localhost:27017/
+MONGODB_DATABASE=osv_vulnerabilities_database
+MONGODB_COLLECTION_QUERY=osv_query_raw
+MONGODB_COLLECTION_VULN=osv_vulnerability_raw
+MONGODB_COLLECTION_BATCH=osv_batch_raw
+
+# ETL Configuration
+RATE_LIMIT_DELAY=1
+BATCH_SIZE=100
+MAX_RETRIES=3
+REQUEST_TIMEOUT=30
+
+# OSV API Specific Configuration
+QUERY_PACKAGE_NAME=numpy
+QUERY_ECOSYSTEM=PyPI
+QUERY_VERSION=1.21.0
+BATCH_QUERY_LIMIT=1000
+VULNERABILITY_ID_LIST=GHSA-cfnp-24c3-hf38,GHSA-489w-9rhx-hjp8
