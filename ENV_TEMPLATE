@@ -1,0 +1,4 @@
+HIBP_API_KEY=your_hibp_key_here
+HIBP_BASE_URL=https://haveibeenpwned.com/api/v3
+MONGO_URI=YOUR_MONGO_URI
+MONGO_DB=YOUR_MONGO_DB
