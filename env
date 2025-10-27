@@ -1,0 +1,6 @@
+MONGO_URI=mongodb://localhost:27017/
+MONGO_DB=ripe_stat_db
+
+RIPESTAT_COUNTRY_RESOURCE_URL=https://stat.ripe.net/data/country-resource-list/data.json
+RIPESTAT_ANNOUNCED_PREFIXES_URL=https://stat.ripe.net/data/announced-prefixes/data.json
+RIPESTAT_ATLAS_PROBES_URL=https://stat.ripe.net/data/atlas-probes/data.json

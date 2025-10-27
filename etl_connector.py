@@ -1,155 +1,96 @@
-import hashlib
-import json
 import os
-import time
-from datetime import datetime, timezone
-from typing import Any, Dict, Iterable, Optional
-
 import requests
+from pymongo import MongoClient
 from dotenv import load_dotenv
-from pymongo import MongoClient, UpdateOne
-from pymongo.collection import Collection
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+import time
 
 load_dotenv()
 
-MONGODB_URI = os.getenv("MONGODB_URI")
-MONGODB_DB = os.getenv("MONGODB_DB")
-MONGODB_COLLECTION = os.getenv("MONGODB_COLLECTION")
+MONGO_URI = os.getenv("MONGO_URI")
+MONGO_DB = os.getenv("MONGO_DB")
+COUNTRY_RESOURCE_URL = os.getenv("RIPESTAT_COUNTRY_RESOURCE_URL")
+ANNOUNCED_PREFIXES_URL = os.getenv("RIPESTAT_ANNOUNCED_PREFIXES_URL")
+ATLAS_PROBES_URL = os.getenv("RIPESTAT_ATLAS_PROBES_URL")
 
-API_BASE_URL = os.getenv("API_BASE_URL")
-API_KEY = os.getenv("API_KEY")  # Optional — NVD allows API key for higher rate limits
+client = MongoClient(MONGO_URI)
+db = client[MONGO_DB]
 
-RESULTS_PER_PAGE = int(os.getenv("RESULTS_PER_PAGE", "10"))
-START_INDEX = int(os.getenv("START_INDEX", "0"))
+collections = {
+    "country_resources": db["country_resources"],
+    "announced_prefixes": db["announced_prefixes"],
+    "atlas_probes": db["atlas_probes"]
+}
 
-def utc_now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+countries = ["IN", "GB", "DE"]
+asns = ["AS3333", "AS3356", "AS15169"]
 
-def stable_hash(obj: Any) -> str:
-    payload = json.dumps(obj, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
-
-def sanitize_for_mongo(doc: Dict[str, Any]) -> Dict[str, Any]:
-    def _sanitize_key(k: str) -> str:
-        k = k.replace(".", "_")
-        if k.startswith("$"):
-            k = "_" + k[1:]
-        return k
-
-    def _sanitize(value: Any) -> Any:
-        if isinstance(value, dict):
-            return {_sanitize_key(k): _sanitize(v) for k, v in value.items()}
-        elif isinstance(value, list):
-            return [_sanitize(v) for v in value]
-        else:
-            return value
-
-    return _sanitize(doc)
-
-class ExtractError(Exception):
-    pass
-
-class BaseConnector:
-    name: str = "base"
-
-    def __init__(self, session: Optional[requests.Session] = None) -> None:
-        self.session = session or requests.Session()
-
-    def auth_headers(self) -> Dict[str, str]:
-        headers = {}
-        if API_KEY:
-            headers["apiKey"] = API_KEY
-        return headers
-
-    def extract(self) -> Iterable[Dict[str, Any]]:
-        raise NotImplementedError
-
-    def transform(self, record: Dict[str, Any]) -> Dict[str, Any]:
-        return sanitize_for_mongo(record)
-
-    def with_metadata(self, doc: Dict[str, Any]) -> Dict[str, Any]:
-        doc["_metadata"] = {
-            "ingested_at": utc_now_iso(),
-            "source": self.name,
-        }
-        doc["hash_key"] = stable_hash(doc)
-        return doc
-
-    def load(self, coll: Collection, docs: Iterable[Dict[str, Any]]) -> None:
-        ops = []
-        for d in docs:
-            key = d.get("hash_key") or stable_hash(d)
-            ops.append(UpdateOne({"hash_key": key}, {"$set": d}, upsert=True))
-        if ops:
-            result = coll.bulk_write(ops, ordered=False)
-            print(f"[LOAD] upserted={result.upserted_count}, modified={result.modified_count}, matched={result.matched_count}")
-        else:
-            print("[LOAD] nothing to write.")
-
-class NvdCveConnector(BaseConnector):
-    name = "nvd_cve_2_0"
-
-    @retry(
-        reraise=True,
-        stop=stop_after_attempt(5),
-        wait=wait_exponential(multiplier=1, min=1, max=30),
-        retry=retry_if_exception_type(ExtractError),
-    )
-    def _get(self, params: Dict[str, Any]) -> Dict[str, Any]:
+def fetch_with_retries(url, params, retries=3, timeout=30):
+    for i in range(retries):
         try:
-            resp = self.session.get(API_BASE_URL, headers=self.auth_headers(), params=params, timeout=20)
-        except requests.RequestException as e:
-            raise ExtractError(f"Network error: {e}") from e
+            response = requests.get(url, params=params, timeout=timeout)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException:
+            if i < retries - 1:
+                time.sleep(2 ** i)
+            else:
+                return None
 
-        if resp.status_code == 429:
-            reset_after = int(resp.headers.get("Retry-After", "2"))
-            print(f"[RATE LIMIT] Sleeping {reset_after}s...")
-            time.sleep(reset_after)
-            raise ExtractError("Rate limited")
+def extract_country_resources(country):
+    return fetch_with_retries(COUNTRY_RESOURCE_URL, {"resource": country})
 
-        if not resp.ok:
-            raise ExtractError(f"HTTP {resp.status_code}: {resp.text[:200]}")
+def extract_announced_prefixes(asn):
+    return fetch_with_retries(ANNOUNCED_PREFIXES_URL, {"resource": asn})
 
-        try:
-            return resp.json()
-        except ValueError as e:
-            raise ExtractError("Invalid JSON response") from e
+def extract_atlas_probes(country):
+    return fetch_with_retries(ATLAS_PROBES_URL, {"resource": country})
 
-    def extract(self) -> Iterable[Dict[str, Any]]:
-        params = {
-            "resultsPerPage": RESULTS_PER_PAGE,
-            "startIndex": START_INDEX
-        }
-        payload = self._get(params)
-        if "vulnerabilities" not in payload:
-            raise ExtractError("No vulnerabilities field in response")
+def transform_country_resources(data, country):
+    if not data or "data" not in data:
+        return []
+    resources = data["data"].get("resources", [])
+    transformed = [{"country": country, "prefixes": resources}]
+    return transformed
 
-        for item in payload["vulnerabilities"]:
-            cve_data = item.get("cve", {})
-            yield {
-                "id": cve_data.get("id"),
-                "sourceIdentifier": cve_data.get("sourceIdentifier"),
-                "published": cve_data.get("published"),
-                "lastModified": cve_data.get("lastModified"),
-                "descriptions": cve_data.get("descriptions", []),
-                "metrics": cve_data.get("metrics", {}),
-                "weaknesses": cve_data.get("weaknesses", []),
-                "configurations": cve_data.get("configurations", []),
-                "references": cve_data.get("references", []),
-            }
+def transform_announced_prefixes(data, asn):
+    if not data or "data" not in data:
+        return []
+    prefixes = [p["prefix"] for p in data["data"].get("prefixes", [])]
+    transformed = [{"asn": asn, "prefixes": prefixes}]
+    return transformed
 
-def get_mongo_collection() -> Collection:
-    client = MongoClient(MONGODB_URI)
-    db = client[MONGODB_DB]
-    return db[MONGODB_COLLECTION]
+def transform_atlas_probes(data, country):
+    if not data or "data" not in data:
+        return []
+    probes = data["data"].get("probes", [])
+    transformed = [{"country": country, "probes": probes}]
+    return transformed
 
-def run() -> None:
-    coll = get_mongo_collection()
-    connector = NvdCveConnector()
-    raw_docs = connector.extract()
-    docs = (connector.with_metadata(connector.transform(r)) for r in raw_docs)
-    connector.load(coll, docs)
+def load(collection_name, records, upsert_key):
+    if records:
+        coll = collections[collection_name]
+        for record in records:
+            coll.update_one(
+                {upsert_key: record[upsert_key]},
+                {"$set": record},
+                upsert=True
+            )
+
+def main():
+    for country in countries:
+        data = extract_country_resources(country)
+        records = transform_country_resources(data, country)
+        load("country_resources", records, "country")
+
+    for asn in asns:
+        data = extract_announced_prefixes(asn)
+        records = transform_announced_prefixes(data, asn)
+        load("announced_prefixes", records, "asn")
+
+    for country in countries:
+        data = extract_atlas_probes(country)
+        records = transform_atlas_probes(data, country)
+        load("atlas_probes", records, "country")
 
 if __name__ == "__main__":
-    run()
+    main()

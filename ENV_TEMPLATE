@@ -1,10 +1,8 @@
-# MongoDB settings
-MONGODB_URI=MongoConnectionURL
-MONGODB_DB=DatabaseName
-MONGODB_COLLECTION=CollectionName
+# MongoDB connection
+MONGO_URI=your_mongodb_connection_string
+MONGO_DB=your_database_name
 
-# NVD API settings
-API_BASE_URL=NVDServicesURL
-API_KEY= Optional
-RESULTS_PER_PAGE=10
-START_INDEX=0
+# RIPEstat API endpoints
+RIPESTAT_COUNTRY_RESOURCE_URL=https://stat.ripe.net/data/country-resource-list/data.json
+RIPESTAT_ANNOUNCED_PREFIXES_URL=https://stat.ripe.net/data/announced-prefixes/data.json
+RIPESTAT_ATLAS_PROBES_URL=https://stat.ripe.net/data/atlas-probes/data.json

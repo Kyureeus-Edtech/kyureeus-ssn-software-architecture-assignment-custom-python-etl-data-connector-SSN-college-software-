@@ -1,129 +1,71 @@
-# NVD CVE ETL Data Connector
+# Custom Python ETL Connector for RIPEstat Data
 
-This project is a Python ETL (Extract, Transform, Load) pipeline that fetches CVE (Common Vulnerabilities and Exposures) data from the [NVD Services API](https://nvd.nist.gov/developers/vulnerabilities) and ingests it into a MongoDB collection. It features robust error handling, secure environment variable management, and idempotent upserts using stable hashes.
+# Name : Vijay Srinivas K - Rno : 3122225001158 - CSE C
 
----
 
-## 📦 Files
+## Overview
+This ETL script extracts network and internet resource data from **RIPEstat API endpoints** for a set of countries and ASNs, transforms the data into a structured format, and loads it into **MongoDB** collections.
 
+## Environment Variables
+Create a `.env` file with the given template.
+
+**Important:** Do not commit `.env` to Git.
+
+## Setup
+1. Clone the repository and create your branch.
+2. Create and fill the `.env` file.
+3. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+````
+
+## Usage
+
+Run the ETL connector:
+
+```bash
+python etl_connector.py
 ```
-etl_connector.py       # Main ETL logic (extract from NVD, transform, and load to MongoDB)
-requirements.txt       # Python dependencies
-.env                   # Environment variables (not committed; see ENV_TEMPLATE)
-ENV_TEMPLATE           # Template for .env file
-.gitignore             # Ensures .env and other junk are not committed
-README.md              # Project documentation (you are here)
-```
 
----
+## Script Overview
 
-## 🚀 Quickstart
+The script will:
 
-1. **Create and activate a virtual environment**
-    ```bash
-    python3 -m venv .venv
-    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-    ```
+* Query the following RIPEstat endpoints:
 
-2. **Install dependencies**
-    ```bash
-    pip install -r requirements.txt
-    ```
+  * Country Resource List (for IN, GB, DE)
+  * Announced Prefixes (for selected ASNs)
+  * Atlas Probes
+* Transform responses into structured dictionaries:
 
-3. **Configure environment variables**
-    - Copy the template and fill in your values:
-      ```bash
-      cp ENV_TEMPLATE .env
-      # Edit .env and set your MongoDB URI, DB, collection, and (optionally) NVD API key
-      ```
+  * `country` or `ASN`
+  * `prefixes` or `probes`
+  * `status` (if available)
+  * `resource` (country code or ASN)
+* Load the data into separate MongoDB collections.
 
-4. **Run the ETL connector**
-    ```bash
-    python etl_connector.py
-    ```
+Duplicates are avoided by updating existing records based on `country` or `ASN`.
 
-If configured correctly, the script will:
-- Extract CVE data from the NVD API
-- Transform it for MongoDB compatibility
-- Insert documents into your MongoDB collection with an `ingested_at` timestamp
+## Git Guidelines
 
----
+* Do not commit `.env`.
+* Write clear commit messages (include your name and roll number if required).
+* Push to your branch and submit a Pull Request when done.
 
-## 🔑 Environment Variables
+## Output Screenshots
 
-Set these in your `.env` file:
+### Country Resource List
 
-| Variable              | Description                                 | Example/Default                      |
-|-----------------------|---------------------------------------------|--------------------------------------|
-| `MONGODB_URI`         | MongoDB connection string                   | `mongodb://localhost:27017`          |
-| `MONGODB_DB`          | MongoDB database name                       | `etl_db`                             |
-| `MONGODB_COLLECTION`  | MongoDB collection name                     | `nvd_cve_raw`                        |
-| `API_BASE_URL`        | NVD API base URL                            | `https://services.nvd.nist.gov/rest/json/cves/2.0` |
-| `API_KEY`             | (Optional) NVD API key for higher rate limits |                                      |
-| `RESULTS_PER_PAGE`    | Number of results per API page              | `10`                                 |
-| `START_INDEX`         | Pagination start index                      | `0`                                  |
+![Country Resource Output 1](images/country_resource.png)
 
----
+### Announced Prefixes
 
-## 🛠️ How It Works
+![Announced Prefixes Output 1](images/announced_prefixes.png)
 
-- **Extraction:** Uses the NVD API to fetch CVE data with pagination and optional API key authentication.
-- **Transformation:** Cleans and sanitizes records for MongoDB (removes dots from keys, handles `$` prefixes).
-- **Loading:** Upserts each record into MongoDB using a stable hash (`hash_key`) for idempotency. Adds metadata such as `ingested_at` and `source`.
+### Atlas Probes
 
----
+![Atlas Probes Output 1](images/atlas_probes_2.png)
 
-## 🧪 Validation & Error Handling
+![Atlas Probes Output 2](images/atlas_probes_1.png)
 
-- Retries with exponential backoff for transient HTTP errors (using `tenacity`)
-- Handles API rate limiting (HTTP 429) with respect to `Retry-After` headers
-- Defensive checks for empty payloads and schema mismatches
-
----
-
-## 🗃️ MongoDB Strategy
-
-- One collection per connector (e.g., `nvd_cve_raw`)
-- Each document includes:
-  - `ingested_at` (UTC ISO string)
-  - `source` (provider name)
-  - `hash_key` (stable hash for idempotency/upserts)
-
----
-
-## 🔗 NVD API Details
-
-- **Base URL:** `https://services.nvd.nist.gov/rest/json/cves/2.0`
-- **Authentication:** Optional API key via `apiKey` header (get from [NVD API Key Registration](https://nvd.nist.gov/developers/request-an-api-key))
-- **Endpoints Used:** `/cves/2.0`
-- **Sample Request:**
-    ```
-    GET /rest/json/cves/2.0?resultsPerPage=10&startIndex=0
-    Headers: { "apiKey": "<your-api-key>" }
-    ```
-- **Sample Response:**
-    ```json
-    {
-      "resultsPerPage": 10,
-      "startIndex": 0,
-      "totalResults": 123456,
-      "vulnerabilities": [
-        {
-          "cve": {
-            "id": "CVE-2024-12345",
-            "sourceIdentifier": "...",
-            "published": "...",
-            "lastModified": "...",
-            "descriptions": [...],
-            "metrics": {...},
-            "weaknesses": [...],
-            "configurations": [...],
-            "references": [...]
-          }
-        },
-        ...
-      ]
-    }
-    ```
-
----
