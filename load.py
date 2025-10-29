@@ -3,7 +3,7 @@ import logging
 from dotenv import load_dotenv
 import os
 
-load_dotenv()  # Load variables from .env
+load_dotenv()  # Load variables from .env file
 
 MONGO_URI = os.getenv("MONGO_URI")
 DB_NAME = os.getenv("DB_NAME")
