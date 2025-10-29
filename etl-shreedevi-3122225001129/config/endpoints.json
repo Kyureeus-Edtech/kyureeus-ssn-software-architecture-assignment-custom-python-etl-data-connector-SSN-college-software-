@@ -1,0 +1,9 @@
+{
+  "base_url": "https://cve.circl.lu/api",
+  "feeds": {
+    "latest_cves": "/last",
+    "db_info": "/dbInfo",
+    "vendor_list": "/browse/microsoft",
+    "product_search": "/search/microsoft/windows_10"
+  }
+}
