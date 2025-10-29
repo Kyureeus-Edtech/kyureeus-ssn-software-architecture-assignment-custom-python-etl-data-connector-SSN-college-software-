@@ -1,0 +1,4 @@
+requests
+pytest
+pymongo
+python-dotenv
