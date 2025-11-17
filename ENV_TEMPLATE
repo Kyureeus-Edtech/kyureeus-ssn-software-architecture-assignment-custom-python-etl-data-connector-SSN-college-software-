@@ -1,0 +1,18 @@
+```bash
+# ==========================================================
+#  ENV TEMPLATE for NVD ETL Connector
+#  Rename this file to ".env" before running the ETL
+# ==========================================================
+
+# Optional API Key for NVD (can be blank)
+NVD_API_KEY=
+
+# MongoDB Connection (for MongoDB Compass)
+MONGO_URI=mongodb://localhost:27017/
+
+# Database and Collection details
+MONGO_DB_NAME=nvd_database
+MONGO_COLLECTION_NAME=nvd_raw_data
+
+# Logging and Configuration
+LOG_LEVEL=INFO
